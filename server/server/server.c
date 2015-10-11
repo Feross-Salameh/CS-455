@@ -36,7 +36,7 @@ int main()
 		printf("WSAStartup failed with error: %d\n", iResult);
 		return 1;
 	}
-
+	printf("Started server process\n");
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
