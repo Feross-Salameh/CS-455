@@ -15,13 +15,32 @@
 
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
+SOCKET ConnectSocket = INVALID_SOCKET;
+char recvbuf[DEFAULT_BUFLEN];
+int recvbuflen = DEFAULT_BUFLEN;
+int s_send(char *message);
+int s_recv(char *message);
 
+int s_send(char * message)
+{
+	int iSendResult = send(ConnectSocket, message, strlen(message), 0);
+	if (iSendResult == SOCKET_ERROR) {
+		printf("send failed with error: %d\n", WSAGetLastError());
+		closesocket(ConnectSocket);
+		WSACleanup();
+		return 1;
+	}
+	return 0;
+}
+int s_recv()
+{
+	return recv(ConnectSocket, recvbuf, recvbuflen, 0);
 
-
+}
 int main(int argc, char **argv)
 {
 	WSADATA wsaData;
-	SOCKET ConnectSocket = INVALID_SOCKET;
+	
 	struct addrinfo *result = NULL,
 		*ptr = NULL,
 		hints;
@@ -29,12 +48,12 @@ int main(int argc, char **argv)
 	char recvbuf[DEFAULT_BUFLEN];
 	int iResult;
 	int recvbuflen = DEFAULT_BUFLEN;
+	char IP[10] = "127.0.0.1";
+	char input[128];
+	int port = -1;
 
-	//// Validate the parameters
-	//if (argc != 2) {
-	//	printf("usage: %s server-name\n", argv[0]);
-	//	return 1;
-	//}
+
+
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);

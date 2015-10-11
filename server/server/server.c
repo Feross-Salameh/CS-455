@@ -7,10 +7,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
-// #pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "Mswsock.lib")
 
 #define DEFAULT_BUFLEN 512
 
@@ -84,7 +83,7 @@ int main()
 	char *pass;
 	struct addrinfo *result = NULL;
 	struct addrinfo hints;
-
+	struct sockaddr_in addr; 
 	int iSendResult;
 
 	// Initialize Winsock
@@ -109,29 +108,21 @@ int main()
 
 	printf("server process using address: tcp://%s:%d\n", IP, port);
 
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	hints.ai_flags = AI_PASSIVE;
-
-	// Resolve the server address and port
-	iResult = getaddrinfo(IP, port, &hints, &result);
-	if (iResult != 0) {
-		printf("getaddrinfo failed with error: %d\n", iResult);
-		WSACleanup();
-		return 1;
-	}
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	if (inet_pton(AF_INET, IP, &addr.sin_addr) != 1)
+		printf("Error in code\n");
 	// Create a SOCKET for connecting to server
-	ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (ListenSocket == INVALID_SOCKET) {
 		printf("socket failed with error: %ld\n", WSAGetLastError());
 		freeaddrinfo(result);
 		WSACleanup();
 		return 1;
 	}
-
+	
 	// Setup the TCP listening socket
-	iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
+	iResult = bind(ListenSocket, (struct sockaddr *)&addr, sizeof(addr));
 	if (iResult == SOCKET_ERROR) {
 		printf("bind failed with error: %d\n", WSAGetLastError());
 		freeaddrinfo(result);

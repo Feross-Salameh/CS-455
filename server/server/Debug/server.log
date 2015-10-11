@@ -1,17 +1,20 @@
-﻿Build started 10/11/2015 1:18:14 PM.
+﻿Build started 10/11/2015 3:10:45 PM.
      1>Project "C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\server\server\server.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TC /analyze- /errorReport:prompt server.c
          server.c
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(55): warning C4026: function declared with formal parameter list
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(66): warning C4098: 'terminate': 'void' function returning a value
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(98): warning C4013: 'gets' undefined; assuming extern returning int
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(118): warning C4047: 'function': 'PCSTR' differs in levels of indirection from 'int'
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(118): warning C4024: 'getaddrinfo': different types for formal and actual parameter 2
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(217): warning C4047: 'function': 'u_short' differs in levels of indirection from 'char [512]'
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(217): warning C4024: 'ntohs': different types for formal and actual parameter 1
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(232): warning C4020: 's_send': too many actual parameters
-     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(88): warning C4101: 'iSendResult': unreferenced local variable
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(54): warning C4026: function declared with formal parameter list
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(65): warning C4098: 'terminate': 'void' function returning a value
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(97): warning C4013: 'gets' undefined; assuming extern returning int
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(208): warning C4047: 'function': 'u_short' differs in levels of indirection from 'char [512]'
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(208): warning C4024: 'ntohs': different types for formal and actual parameter 1
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(223): warning C4020: 'strlen': too many actual parameters
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(223): warning C4267: 'function': conversion from 'size_t' to 'u_short', possible loss of data
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(223): warning C4047: 'function': 'char *' differs in levels of indirection from 'u_short'
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(223): warning C4024: 's_send': different types for formal and actual parameter 1
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(225): warning C4020: 's_send': too many actual parameters
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(85): warning C4101: 'hints': unreferenced local variable
+     1>c:\users\feross salameh\dropbox\cs 455\projects\cs-455\server\server\server.c(87): warning C4101: 'iSendResult': unreferenced local variable
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\server\Debug\server.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\server\Debug\server.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\server\Debug\server.lib" /MACHINE:X86 Debug\server.obj
          Debug\stdafx.obj
@@ -20,4 +23,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.20
+Time Elapsed 00:00:00.86
