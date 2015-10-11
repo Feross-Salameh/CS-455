@@ -1,6 +1,6 @@
 // client.cpp : Defines the entry point for the console application.
 //
-#include <windows.h>
+//#include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
@@ -17,8 +17,6 @@
 #define DEFAULT_PORT "27015"
 
 
-#include "stdafx.h"
-
 
 int main(int argc, char **argv)
 {
@@ -32,11 +30,11 @@ int main(int argc, char **argv)
 	int iResult;
 	int recvbuflen = DEFAULT_BUFLEN;
 
-	// Validate the parameters
-	if (argc != 2) {
-		printf("usage: %s server-name\n", argv[0]);
-		return 1;
-	}
+	//// Validate the parameters
+	//if (argc != 2) {
+	//	printf("usage: %s server-name\n", argv[0]);
+	//	return 1;
+	//}
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -51,7 +49,7 @@ int main(int argc, char **argv)
 	hints.ai_protocol = IPPROTO_TCP;
 
 	// Resolve the server address and port
-	iResult = getaddrinfo(argv[1], DEFAULT_PORT, &hints, &result);
+	iResult = getaddrinfo("127.0.0.1", DEFAULT_PORT, &hints, &result);
 	if (iResult != 0) {
 		printf("getaddrinfo failed with error: %d\n", iResult);
 		WSACleanup();
@@ -125,6 +123,6 @@ int main(int argc, char **argv)
 	closesocket(ConnectSocket);
 	WSACleanup();
 
-    return 0;
+	return 0;
 }
 
