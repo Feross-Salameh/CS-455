@@ -94,6 +94,7 @@ int main()
 	char *pass;
 	struct addrinfo *result = NULL;
 	struct sockaddr_in addr; 
+	char passl[4];
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -207,19 +208,27 @@ int main()
 		return 0;
 	}
 
-	if (s_recv() < 0) // length of password. 
+	// length of password.
+	iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+	if (iResult <= 0)
 	{
 		terminate();
 		return 0;
 	}
-	len = (UINT16)ntohs((u_short)filteredMsg);
+	passl[0] = (recvbuf[0]);
+	passl[1] = (recvbuf[1]);
+	passl[2] = (recvbuf[2]);
+	passl[3] = (recvbuf[3]);
+	//len = (UINT16)ntohs((u_short)passl);
+	len = (u_short)passl[1] + 16* (u_short)passl[0];
+	//len = ntohs(len); // some reason not working.
 	if (s_recv() < 0) // actual password. 
 	{
 		terminate();
 		return 0;
 	}
 	pass = (char *)malloc(sizeof(char) * len);
-	strncpy_s(pass, len, recvbuf, len);
+	strncpy_s(pass, len + 1, recvbuf, len+1);
 
 	if (strncmp(passwords[i], pass, len))
 	{
@@ -227,15 +236,12 @@ int main()
 		s_send("Password incorrect\n");
 	}
 
+	sprintf_s(recvbuf, DEFAULT_BUFLEN, "Congradulations %s; you've just revealed the password for %s to the world!\n", name[i], ID[i]);
 
-
-	//s_send(htons(strlen("Congradulations %s; you've just revealed the password for %s to the world!\n", name[i], ID[i])));
-
-	//s_send("Congradulations %s; you've just revealed the password for %s to the world!\n", name[i], ID[i]);
+	s_send(recvbuf);
 
 	// shutdown the connection since we're done
 	terminate();
-
     return 0;
 }
 

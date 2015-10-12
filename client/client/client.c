@@ -182,16 +182,28 @@ int main(int argc, char **argv)
 	gets(input);
 
 	len = htons(strlen(input));
+	int iSendResult = send(ConnectSocket, &len, sizeof(u_short), 0);
+	if (iSendResult == SOCKET_ERROR) {
+		printf("send failed with error: %d\n", WSAGetLastError());
+		closesocket(ConnectSocket);
+		WSACleanup();
+		return 1;
+	}
 
-	strncpy_s(lenMsg, strlen(lenMsg), (char *)&len, 2);
-	lenMsg[2] = '\n';
-
-
-	if (s_send(lenMsg))
+	input[strlen(input)] = '\n';
+	if (s_send(input))
 	{
 		shut();
 		return 0;
 	}
+	if (s_recv() < 0)
+	{
+		printf("Client: error recieving message. Closing. \n");
+		shut();
+		return 0;
+	}
+
+	printf("%s\n", filteredMsg);
 
 	//if (s_recv() < 0)
 	//{
@@ -200,8 +212,7 @@ int main(int argc, char **argv)
 	//	return 0;
 	//}
 	//// cleanup
-	shut();
-
+	gets(input);
 	return 0;
 }
 
