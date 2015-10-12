@@ -14,12 +14,14 @@
 
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT "27015"
 SOCKET ConnectSocket = INVALID_SOCKET;
 char recvbuf[DEFAULT_BUFLEN];
 int recvbuflen = DEFAULT_BUFLEN;
 int s_send(char *message);
-int s_recv(char *message);
+int s_recv();
+void shut();
+char *filteredMsg = "  ";
+
 
 int s_send(char * message)
 {
@@ -34,16 +36,37 @@ int s_send(char * message)
 }
 int s_recv()
 {
-	return recv(ConnectSocket, recvbuf, recvbuflen, 0);
+	char* context = NULL;
+	int result = recv(ConnectSocket, (char *)&recvbuf, recvbuflen, 0);
+	if (result < 0)
+	{
+		shut();
+		return -1;
+	}
+
+	filteredMsg = strtok_s(recvbuf, "\n", &context);
+	return 1;
+}
+void shut()
+{
+	int iResult = shutdown(ConnectSocket, SD_SEND);
+	if (iResult == SOCKET_ERROR) {
+		printf("shutdown failed with error: %d\n", WSAGetLastError());
+		closesocket(ConnectSocket);
+		WSACleanup();
+		return;
+	}
+
+	// cleanup
+	closesocket(ConnectSocket);
+	WSACleanup();
 
 }
+
 int main(int argc, char **argv)
 {
 	WSADATA wsaData;
-	
-	struct addrinfo *result = NULL,
-		*ptr = NULL,
-		hints;
+
 	char *sendbuf = "this is a test";
 	char recvbuf[DEFAULT_BUFLEN];
 	int iResult;
@@ -51,9 +74,9 @@ int main(int argc, char **argv)
 	char IP[10] = "127.0.0.1";
 	char input[128];
 	int port = -1;
-
-
-
+	struct sockaddr_in addr;
+	u_short len;
+	char lenMsg[3] = "12\n";
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -62,42 +85,41 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	// Resolve the server address and port
-	iResult = getaddrinfo("127.0.0.1", DEFAULT_PORT, &hints, &result);
-	if (iResult != 0) {
-		printf("getaddrinfo failed with error: %d\n", iResult);
-		WSACleanup();
+	printf("Started client process\n");
+	printf("Please enter IP for client process(localhost by default): ");
+	gets(IP);
+	if (!strcmp(IP, ""))
+		strncpy_s(IP, 10, "127.0.0.1", 9);
+	printf("Please enter port number: ");
+	gets(input);
+	port = atoi(input);
+	if (port <= 0)
+	{
+		printf("Invalid port number entered, leaving process\n");
 		return 1;
 	}
 
-	// Attempt to connect to an address until one succeeds
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+	printf("client process using address: tcp://%s:%d\n", IP, port);
 
-		// Create a SOCKET for connecting to server
-		ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype,
-			ptr->ai_protocol);
-		if (ConnectSocket == INVALID_SOCKET) {
-			printf("socket failed with error: %ld\n", WSAGetLastError());
-			WSACleanup();
-			return 1;
-		}
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	if (inet_pton(AF_INET, IP, &addr.sin_addr) != 1)
+		printf("Error in code\n");
 
-		// Connect to server.
-		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-		if (iResult == SOCKET_ERROR) {
-			closesocket(ConnectSocket);
-			ConnectSocket = INVALID_SOCKET;
-			continue;
-		}
-		break;
+	// Create a SOCKET for connecting to server
+	ConnectSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (ConnectSocket == INVALID_SOCKET) {
+		printf("socket failed with error: %ld\n", WSAGetLastError());
+		WSACleanup();
+		return 1;
 	}
-
-	freeaddrinfo(result);
+	printf("client: connecting to socket...");
+	// Connect to server.
+	iResult = connect(ConnectSocket, (struct sockaddr *)&addr, sizeof(addr));
+	if (iResult == SOCKET_ERROR) {
+		closesocket(ConnectSocket);
+		ConnectSocket = INVALID_SOCKET;
+	}
 
 	if (ConnectSocket == INVALID_SOCKET) {
 		printf("Unable to connect to server!\n");
@@ -105,42 +127,80 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	// Send an initial buffer
-	iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
-	if (iResult == SOCKET_ERROR) {
-		printf("send failed with error: %d\n", WSAGetLastError());
-		closesocket(ConnectSocket);
-		WSACleanup();
-		return 1;
+	printf("Connected.\nClient: waiting for welcome message.\n");
+	if (s_recv() < 0)
+	{	
+		printf("Client: error recieving message. Closing. \n");
+		shut();
+		return 0;
+	}
+	printf("Recieved: %s.\n", filteredMsg);
+	if (strcmp(filteredMsg, "welcome") != 0)
+	{
+		printf("Recieved unknown message, Closing\n.");
+		shut();
+		return 0;
 	}
 
-	printf("Bytes Sent: %ld\n", iResult);
+	printf("Client, please enter ID number:");
+	gets(input);
 
-	// shutdown the connection since no more data will be sent
-	iResult = shutdown(ConnectSocket, SD_SEND);
-	if (iResult == SOCKET_ERROR) {
-		printf("shutdown failed with error: %d\n", WSAGetLastError());
-		closesocket(ConnectSocket);
-		WSACleanup();
-		return 1;
+	if (s_send(input))
+	{
+		shut();
+		return 0;
 	}
 
-	// Receive until the peer closes the connection
-	do {
+	printf("please enter name: ");
+	gets(input);
+	if (s_send(input))
+	{
+		shut();
+		return 0;
+	}
+	if (s_recv() < 0)
+	{
+		printf("Client: error recieving message. Closing. \n");
+		shut();
+		return 0;
+	}
+	if (!strcmp(filteredMsg, "failure"))
+	{
+		printf("Incorrect ID/name combination. Closing");
+		shut();
+		return 0;
+	}
+	else if (strcmp(filteredMsg, "success") != 0)
+	{
+		printf("Recieved unknown message, Closing\n.");
+		shut();
+		return 0;
+	}
 
-		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-		if (iResult > 0)
-			printf("Bytes received: %d\n", iResult);
-		else if (iResult == 0)
-			printf("Connection closed\n");
-		else
-			printf("recv failed with error: %d\n", WSAGetLastError());
+	printf("Client: found pair in server.\n");
+	printf("Please enter password: ");
+	gets(input);
 
-	} while (iResult > 0);
+	len = htons(strlen(input));
 
-	// cleanup
-	closesocket(ConnectSocket);
-	WSACleanup();
+	strncpy_s(lenMsg, strlen(lenMsg), (char *)&len, 2);
+	lenMsg[2] = '\n';
+
+
+	if (s_send(lenMsg))
+	{
+		shut();
+		return 0;
+	}
+
+	//if (s_recv() < 0)
+	//{
+	//	printf("Client: error recieving message. Closing. \n");
+	//	shut();
+	//	return 0;
+	//}
+	//// cleanup
+	shut();
 
 	return 0;
 }

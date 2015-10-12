@@ -34,14 +34,16 @@ char passwords[4][10] = {"test1",
 char recvbuf[DEFAULT_BUFLEN];
 int recvbuflen = DEFAULT_BUFLEN;
 int s_send(char *message);
-int s_recv(char *message);
+int s_recv();
 void terminate();
 SOCKET ListenSocket = INVALID_SOCKET;
 SOCKET ClientSocket = INVALID_SOCKET;
+char *filteredMsg;
 
 int s_send(char * message)
 {
 	int iSendResult = send(ClientSocket, message, strlen(message), 0);
+
 	if (iSendResult == SOCKET_ERROR) {
 		printf("send failed with error: %d\n", WSAGetLastError());
 		closesocket(ClientSocket);
@@ -52,7 +54,16 @@ int s_send(char * message)
 }
 int s_recv()
 {
-	 return recv(ClientSocket, recvbuf, recvbuflen, 0);
+	char* context = NULL;
+	int result = recv(ClientSocket, (char *)&recvbuf, recvbuflen, 0);
+	if (result < 0)
+	{
+		terminate();
+		return -1;
+	}
+
+	filteredMsg = strtok_s(recvbuf, "\n", &context);
+	return 1;
 
 }
 void terminate()
@@ -62,7 +73,7 @@ void terminate()
 		printf("shutdown failed with error: %d\n", WSAGetLastError());
 		closesocket(ClientSocket);
 		WSACleanup();
-		return 1;
+		return;
 	}
 
 	// cleanup
@@ -82,9 +93,7 @@ int main()
 	UINT16 len = 0;
 	char *pass;
 	struct addrinfo *result = NULL;
-	struct addrinfo hints;
 	struct sockaddr_in addr; 
-	int iSendResult;
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -170,7 +179,7 @@ int main()
 	printf("got message.\nNow checking for matches...");
 	for (i = 0; i < 4; i++)
 	{
-		if (!strncmp(ID[i], recvbuf, strlen(ID[i])))
+		if (!strncmp(ID[i], filteredMsg, strlen(ID[i])))
 			break; // found match
 		else if (i == 4)
 			i = 15; // error number, beyound range.
@@ -178,18 +187,16 @@ int main()
 	if (i == 15)
 	{
 		printf("server: no matchinges found, closing connection.\n");
-		terminate();
-		return 0;
 	}
-	printf("Match ID found.\n");
 	if (s_recv() < 0)
 	{
 		terminate();
 		return 0;
 	}
-	if (strncmp(name[i], recvbuf, strlen(name[i])))
+	if (strncmp(name[i], filteredMsg, strlen(name[i])))
 	{
-		printf("server: no matchinges found, closing connection.\n");
+		printf("server: no matchinges found, closing connection.\n");\
+		s_send("failure\n");
 		terminate();
 		return 0;
 	}
@@ -205,7 +212,7 @@ int main()
 		terminate();
 		return 0;
 	}
-	len = ntohs(recvbuf);
+	len = (UINT16)ntohs((u_short)filteredMsg);
 	if (s_recv() < 0) // actual password. 
 	{
 		terminate();
@@ -220,9 +227,11 @@ int main()
 		s_send("Password incorrect\n");
 	}
 
-	s_send(htons(strlen("Congradulations %s; you've just revealed the password for %s to the world!\n", name[i], ID[i])));
 
-	s_send("Congradulations %s; you've just revealed the password for %s to the world!\n", name[i], ID[i]);
+
+	//s_send(htons(strlen("Congradulations %s; you've just revealed the password for %s to the world!\n", name[i], ID[i])));
+
+	//s_send("Congradulations %s; you've just revealed the password for %s to the world!\n", name[i], ID[i]);
 
 	// shutdown the connection since we're done
 	terminate();
