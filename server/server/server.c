@@ -6,13 +6,11 @@
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
-
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 
 #define DEFAULT_BUFLEN 512
-
 // table of IDs/Names
 char ID[4][10] = {	"1",
 					"2",
@@ -42,7 +40,7 @@ char *filteredMsg;
 
 int s_send(char * message)
 {
-	int iSendResult = send(ClientSocket, message, strlen(message), 0);
+	int iSendResult = send(ClientSocket, message, (int)strlen(message), 0);
 
 	if (iSendResult == SOCKET_ERROR) {
 		printf("send failed with error: %d\n", WSAGetLastError());
@@ -86,7 +84,7 @@ int main()
 {
 	WSADATA wsaData;
 	int iResult;
-	char IP[10] = "127.0.0.1";
+	char IP[15] = "127.0.0.1";
 	char input[128];
 	int port = -1;
 	int i;
@@ -95,7 +93,6 @@ int main()
 	struct addrinfo *result = NULL;
 	struct sockaddr_in addr; 
 	char passl[4];
-
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != 0) {
@@ -104,9 +101,10 @@ int main()
 	}
 	printf("Started server process\n");
 	printf("Please enter IP for server process(localhost by default): ");
+
 	gets(IP);
 	if (!strcmp(IP, ""))
-		strncpy_s(IP, 10, "127.0.0.1", 9);
+		strncpy_s(IP, 10, "127.000.000.001", 9);
 	printf("Please enter port number: ");
 	gets(input);
 	port = atoi(input);
@@ -120,8 +118,13 @@ int main()
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
+
 	if (inet_pton(AF_INET, IP, &addr.sin_addr) != 1)
-		printf("Error in code\n");
+	{
+		printf("Error in code, bad address.\n");
+		gets(input);
+		return 1;
+	}
 	// Create a SOCKET for connecting to server
 	ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (ListenSocket == INVALID_SOCKET) {

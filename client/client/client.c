@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 	char recvbuf[DEFAULT_BUFLEN];
 	int iResult;
 	int recvbuflen = DEFAULT_BUFLEN;
-	char IP[10] = "127.0.0.1";
+	char IP[15] = "127.0.0.1";
 	char input[128];
 	int port = -1;
 	struct sockaddr_in addr;
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
-	if (inet_pton(AF_INET, IP, &addr.sin_addr) != 1)
+	if (inet_pton(AF_INET, &IP, &addr.sin_addr) != 1)
 		printf("Error in code\n");
 
 	// Create a SOCKET for connecting to server
@@ -187,6 +187,7 @@ int main(int argc, char **argv)
 		printf("send failed with error: %d\n", WSAGetLastError());
 		closesocket(ConnectSocket);
 		WSACleanup();
+		gets(input);
 		return 1;
 	}
 
@@ -194,12 +195,14 @@ int main(int argc, char **argv)
 	if (s_send(input))
 	{
 		shut();
+		gets(input);
 		return 0;
 	}
 	if (s_recv() < 0)
 	{
 		printf("Client: error recieving message. Closing. \n");
 		shut();
+		gets(input);
 		return 0;
 	}
 
