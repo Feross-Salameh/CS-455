@@ -84,7 +84,7 @@ int main()
 {
 	WSADATA wsaData;
 	int iResult;
-	char IP[15] = "127.0.0.1";
+	char IP[16] = "127.0.0.1";
 	char input[128];
 	int port = -1;
 	int i;
@@ -104,7 +104,7 @@ int main()
 
 	gets(IP);
 	if (!strcmp(IP, ""))
-		strncpy_s(IP, 10, "127.000.000.001", 9);
+		strncpy_s(IP, 10, "127.0.0.1", 9);
 	printf("Please enter port number: ");
 	gets(input);
 	port = atoi(input);

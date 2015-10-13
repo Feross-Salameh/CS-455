@@ -207,7 +207,7 @@ int main(int argc, char **argv)
 	}
 
 	printf("%s\n", filteredMsg);
-
+	shut();
 	//if (s_recv() < 0)
 	//{
 	//	printf("Client: error recieving message. Closing. \n");
