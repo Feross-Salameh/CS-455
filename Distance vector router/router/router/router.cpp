@@ -13,8 +13,10 @@ int main(int argc, char *argv[])
 {
 
 	name = argv[1][0];
-	readConfig(L"test1");
 
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring testFolder = converter.from_bytes(argv[2]);
+	readConfig(testFolder);
     return 0;
 }
 

@@ -18,6 +18,8 @@
 #include <map>
 #include <fstream>
 #include <string>
+#include <locale>
+#include <codecvt>
 
 // definitions 
 #define INF 64 // used for calculating distances 
@@ -29,11 +31,11 @@ using namespace std;
 
 typedef struct myStruct 
 {
-	int distance;
-	char nextHop;
-	int portTo;
-	int portFrom;
-	int basePort;
+	int distance = INF;
+	char nextHop = 0;
+	int portTo = -1;
+	int portFrom = -1;
+	int basePort = -1;
 
 }routingEntry; 
 static map<char, routingEntry> table; //this will contain the distance vector routing table.

@@ -53,8 +53,31 @@ int readConfig(wstring foldername)
 		
 	}
 	config.close();
+	// reading router file now.
+	ifstream rtr("routers");
+	if (!rtr.is_open())
+	{
+		MessageBox(NULL, (LPCWSTR)L"Unable to open config file", (LPCWSTR)name, MB_OK);
+		return -1;
+	}
+	while (getline(rtr, line))
+	{
+		char *context = NULL;
+		char *tok = strtok_s(&line[0], " ", &context);
+		// first tok name of other router.
+		char newName = *tok;
+		tok = strtok_s(NULL, " ", &context);
+		tok = strtok_s(NULL, " ", &context);
 
-
+		table[newName].basePort = atoi(tok);
+		if (newName == name)
+		{
+			table[name].distance = 0;
+			table[name].nextHop = 0;
+			table[name].portFrom = 0;
+			table[name].portTo = 0;
+		}
+	}
 
 	return 1;
 }
