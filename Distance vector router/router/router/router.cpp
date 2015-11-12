@@ -8,15 +8,16 @@ char name;
 bool poisonReverse = false;
 fd_set master; // contains all sockets 
 fd_set read; // used when calling select
-
+map<char, routingEntry> table; //this will contain the distance vector routing table.
 int main(int argc, char *argv[])
 {
-
 	name = argv[1][0];
-
 	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 	wstring testFolder = converter.from_bytes(argv[2]);
 	readConfig(testFolder);
+
+
+
     return 0;
 }
 

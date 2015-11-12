@@ -38,7 +38,7 @@ typedef struct myStruct
 	int basePort = -1;
 
 }routingEntry; 
-static map<char, routingEntry> table; //this will contain the distance vector routing table.
+
 
 // functions prototypes
 

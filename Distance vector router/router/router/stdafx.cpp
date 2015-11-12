@@ -8,7 +8,7 @@ extern char name;
 extern bool poisonReverse;
 extern fd_set master; // contains all sockets 
 extern fd_set read; // used when calling select
-
+extern map<char, routingEntry> table; //this will contain the distance vector routing table.
 int readConfig(wstring foldername)
 {
 	wstring dir = L"..\\..\\proj2-skeleton\\";
