@@ -1,6 +1,6 @@
 ﻿namespace command_gui
 {
-    partial class Form1
+    partial class starter
     {
         /// <summary>
         /// Required designer variable.
@@ -28,20 +28,93 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.lb_processList = new System.Windows.Forms.ListBox();
+            this.btn_start = new System.Windows.Forms.Button();
+            this.btn_terminate = new System.Windows.Forms.Button();
+            this.tb_name = new System.Windows.Forms.TextBox();
+            this.cb_poisedReverse = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // Form1
+            // lb_processList
+            // 
+            this.lb_processList.FormattingEnabled = true;
+            this.lb_processList.Location = new System.Drawing.Point(162, 163);
+            this.lb_processList.Name = "lb_processList";
+            this.lb_processList.Size = new System.Drawing.Size(182, 303);
+            this.lb_processList.TabIndex = 0;
+            // 
+            // btn_start
+            // 
+            this.btn_start.Location = new System.Drawing.Point(12, 54);
+            this.btn_start.Name = "btn_start";
+            this.btn_start.Size = new System.Drawing.Size(139, 48);
+            this.btn_start.TabIndex = 1;
+            this.btn_start.Text = "Start";
+            this.btn_start.UseVisualStyleBackColor = true;
+            // 
+            // btn_terminate
+            // 
+            this.btn_terminate.Location = new System.Drawing.Point(205, 54);
+            this.btn_terminate.Name = "btn_terminate";
+            this.btn_terminate.Size = new System.Drawing.Size(139, 48);
+            this.btn_terminate.TabIndex = 2;
+            this.btn_terminate.Text = "Terminate";
+            this.btn_terminate.UseVisualStyleBackColor = true;
+            // 
+            // tb_name
+            // 
+            this.tb_name.Location = new System.Drawing.Point(12, 205);
+            this.tb_name.Name = "tb_name";
+            this.tb_name.Size = new System.Drawing.Size(109, 20);
+            this.tb_name.TabIndex = 3;
+            // 
+            // cb_poisedReverse
+            // 
+            this.cb_poisedReverse.AutoSize = true;
+            this.cb_poisedReverse.Location = new System.Drawing.Point(12, 231);
+            this.cb_poisedReverse.Name = "cb_poisedReverse";
+            this.cb_poisedReverse.Size = new System.Drawing.Size(101, 17);
+            this.cb_poisedReverse.TabIndex = 4;
+            this.cb_poisedReverse.Text = "Poised Reverse";
+            this.cb_poisedReverse.UseVisualStyleBackColor = true;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 189);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(76, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "Process Name";
+            // 
+            // starter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(531, 477);
-            this.Name = "Form1";
+            this.ClientSize = new System.Drawing.Size(372, 494);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.cb_poisedReverse);
+            this.Controls.Add(this.tb_name);
+            this.Controls.Add(this.btn_terminate);
+            this.Controls.Add(this.btn_start);
+            this.Controls.Add(this.lb_processList);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Name = "starter";
             this.Text = "Form1";
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
+
+        private System.Windows.Forms.ListBox lb_processList;
+        private System.Windows.Forms.Button btn_start;
+        private System.Windows.Forms.Button btn_terminate;
+        private System.Windows.Forms.TextBox tb_name;
+        private System.Windows.Forms.CheckBox cb_poisedReverse;
+        private System.Windows.Forms.Label label1;
     }
 }
 

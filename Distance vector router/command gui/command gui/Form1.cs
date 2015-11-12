@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace command_gui
 {
-    public partial class Form1 : Form
+    public partial class starter : Form
     {
-        public Form1()
+        public starter()
         {
             InitializeComponent();
         }
