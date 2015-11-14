@@ -4,11 +4,14 @@
 
 #include "stdafx.hpp"
 // variables
-extern char name;
-extern bool poisonReverse;
-extern fd_set master; // contains all sockets 
-extern fd_set read; // used when calling select
-extern map<char, routingEntry> table; //this will contain the distance vector routing table.
+char name;
+bool poisonReverse = false;
+fd_set masterRead; // contains all sockets for reading
+fd_set masterWrite; // contains all sockets for writing
+fd_set read; // used when calling select
+fd_set write; // used when calling select
+map<char, routingEntry> table; //this will contain the distance vector routing table.
+WSADATA wsaData;
 int readConfig(wstring foldername)
 {
 	wstring dir = L"..\\..\\proj2-skeleton\\";
@@ -79,5 +82,96 @@ int readConfig(wstring foldername)
 		}
 	}
 
+	return 1;
+}
+
+int setupSockets()
+{
+	//clear all fd sets
+	FD_ZERO(&masterRead);
+	FD_ZERO(&masterWrite);
+	FD_ZERO(&read);
+	FD_ZERO(&write);
+	int iResult;
+	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0) {
+		cout << "WSAStartup failed with error: " << iResult << endl;
+		return -1;
+	}
+	initLisSok(table[name].basePort);
+	for (auto iter = table.begin(); iter != table.end(); iter++)
+	{
+		routingEntry temp = iter->second;
+		//setting up all the sockets needed for reading/writing
+		if (table[name].basePort != temp.basePort)  // no need to calculate own ports
+		{ 
+			int readPort, writePort;
+			writePort = table[name].basePort + temp.portTo;
+			readPort = temp.basePort + temp.portFrom;
+			if (initLisSok(writePort) == -1)
+				cout << "failed to bind to port: " << writePort << endl;
+			if (initConSok(readPort) == -1)
+				cout << "failed to connect to port: " << readPort << endl; // this setup will need to be repeated until all sockets are connected. 
+		}	
+
+	}
+
+	return 1;
+}
+
+int initLisSok(int port)
+{
+	int iResult;
+	u_long nonblock = 1;
+	struct addrinfo *result = NULL;
+	struct sockaddr_in addr;
+	string IP = "127.0.0.1";
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
+		return -1;
+
+	SOCKET sok = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sok == INVALID_SOCKET)
+		return -1;
+
+	iResult = ioctlsocket(sok, FIONBIO, &nonblock);
+	if (iResult == SOCKET_ERROR)
+		return -1;
+
+	iResult = bind(sok, (PSOCKADDR)&addr, sizeof(addr));
+	if (iResult == SOCKET_ERROR)
+		return -1;
+	
+	listen(sok, 5);
+	FD_SET(sok, &masterWrite);
+
+	return 1;
+}
+
+int initConSok(int port)
+{
+	int iResult;
+	u_long nonblock = 1;
+	struct addrinfo *result = NULL;
+	struct sockaddr_in addr;
+	string IP = "127.0.0.1";
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
+		return -1;
+
+	SOCKET sok = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sok == INVALID_SOCKET)
+		return -1;
+
+	iResult = ioctlsocket(sok, FIONBIO, &nonblock);
+	if (iResult == SOCKET_ERROR)
+		return -1;
+
+	iResult = connect(sok, (PSOCKADDR)&addr, sizeof(addr));
+	if (iResult == SOCKET_ERROR)
+		return -1;
+	FD_SET(sok, &masterRead);
 	return 1;
 }
