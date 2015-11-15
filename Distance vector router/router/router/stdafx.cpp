@@ -85,7 +85,7 @@ int readConfig(wstring foldername)
 	return 1;
 }
 
-<<<<<<< HEAD
+
 /*void routerUpdate(string message) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 {
 	char* strptr = &message[0];
@@ -132,11 +132,12 @@ int readConfig(wstring foldername)
 void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
 {
 	char* strptr = &message[0];
+	char *context = NULL;
 	string tokenized[3];
 
 	for (int i = 0; i < 3; i++) // Populate string array.
 	{
-		strptr = strtok(&message[0], " ");
+		strptr = strtok_s(&message[0], " ", &context);
 		tokenized[i] = strptr;
 	}
 
@@ -146,10 +147,11 @@ void linkCostChange(string message) // "User to Host" Link cost message looks li
 void printRoutingTable(string message) // "User to Host" Print message looks like: "P d" or "P" 
 {
 	char* strptr = &message[0];
+	char *context = NULL;
 	string tokenized[2];
 	for (int i = 0; i < 3; i++) // Populate string array.
 	{
-		strptr = strtok(&message[0], " ");
+		strptr = strtok_s(&message[0], " ", &context);
 		tokenized[i] = strptr;
 	}
 
@@ -166,7 +168,7 @@ void printRoutingTable(string message) // "User to Host" Print message looks lik
 	
 	cout << endl;
 };
-=======
+
 int setupSockets()
 {
 	//clear all fd sets
@@ -201,7 +203,7 @@ int setupSockets()
 	return 1;
 }
 
-int initLisSok(int port)
+SOCKET initLisSok(int port)
 {
 	int iResult;
 	u_long nonblock = 1;
@@ -211,27 +213,27 @@ int initLisSok(int port)
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
-		return -1;
+		return NULL;
 
 	SOCKET sok = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sok == INVALID_SOCKET)
-		return -1;
+		return NULL;
 
 	iResult = ioctlsocket(sok, FIONBIO, &nonblock);
 	if (iResult == SOCKET_ERROR)
-		return -1;
+		return NULL;
 
 	iResult = bind(sok, (PSOCKADDR)&addr, sizeof(addr));
 	if (iResult == SOCKET_ERROR)
-		return -1;
+		return NULL;
 	
 	listen(sok, 5);
 	FD_SET(sok, &masterWrite);
 
-	return 1;
+	return sok;
 }
 
-int initConSok(int port)
+SOCKET initConSok(int port)
 {
 	int iResult;
 	u_long nonblock = 1;
@@ -241,20 +243,20 @@ int initConSok(int port)
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
-		return -1;
+		return NULL;
 
 	SOCKET sok = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (sok == INVALID_SOCKET)
-		return -1;
+		return NULL;
 
 	iResult = ioctlsocket(sok, FIONBIO, &nonblock);
 	if (iResult == SOCKET_ERROR)
-		return -1;
+		return NULL;
 
 	iResult = connect(sok, (PSOCKADDR)&addr, sizeof(addr));
 	if (iResult == SOCKET_ERROR)
-		return -1;
+		return NULL;
 	FD_SET(sok, &masterRead);
-	return 1;
+	return sok;
 }
->>>>>>> origin/master
+

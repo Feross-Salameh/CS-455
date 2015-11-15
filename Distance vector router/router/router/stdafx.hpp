@@ -43,6 +43,8 @@ typedef struct myStruct
 	int portTo = -1; // first number after cost
 	int portFrom = -1; // second number after cost
 	int basePort = -1; 
+	SOCKET listenSocket;
+	SOCKET sendSocket;
 
 }routingEntry; 
 
@@ -64,16 +66,16 @@ int readConfig(wstring foldername);
 int setupSockets();
 
 /*
-	Will initilize and setup a socket to bind to a certain port, then will add the socket to the masterWrite fd_set. 
+	Will initilize and setup a socket to bind to a certain port, then will add the socket to the masterWrite fd_set. will also return the socket
 	NOTE: this function was designed to only be called from the setupSockets() function. Since setupSockets will initilize the WSUDATA
 */
-int initLisSok(int port);
+SOCKET initLisSok(int port);
 
 
 /*
-	Will initilize and setup a socket to bind to a certain port, then will add the socket to the masterRead fd_set. 
+	Will initilize and setup a socket to bind to a certain port, then will add the socket to the masterRead fd_set. will also return the socket
 	NOTE: this function was designed to only be called from the setupSockets() function. Since setupSockets will initilize the WSUDATA
 */
-int initConSok(int port);
+SOCKET initConSok(int port);
 
 #endif // ROUTER_HPP
