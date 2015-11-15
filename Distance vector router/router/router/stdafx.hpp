@@ -69,13 +69,13 @@ int setupSockets();
 	Will initilize and setup a socket to bind to a certain port, then will add the socket to the masterWrite fd_set. will also return the socket
 	NOTE: this function was designed to only be called from the setupSockets() function. Since setupSockets will initilize the WSUDATA
 */
-SOCKET initLisSok(int port);
+int initLisSok(int port, char router);
 
 
 /*
 	Will initilize and setup a socket to bind to a certain port, then will add the socket to the masterRead fd_set. will also return the socket
 	NOTE: this function was designed to only be called from the setupSockets() function. Since setupSockets will initilize the WSUDATA
 */
-SOCKET initConSok(int port);
+int initConSok(int port, char router);
 
 #endif // ROUTER_HPP

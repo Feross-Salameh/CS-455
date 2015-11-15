@@ -182,7 +182,7 @@ int setupSockets()
 		cout << "WSAStartup failed with error: " << iResult << endl;
 		return -1;
 	}
-	initLisSok(table[name].basePort);
+	initLisSok(table[name].basePort, name);
 	for (auto iter = table.begin(); iter != table.end(); iter++)
 	{
 		routingEntry temp = iter->second;
@@ -192,9 +192,9 @@ int setupSockets()
 			int readPort, writePort;
 			writePort = table[name].basePort + temp.portTo;
 			readPort = temp.basePort + temp.portFrom;
-			if (initLisSok(writePort) == -1)
+			if (initLisSok(writePort, iter->first) == -1)
 				cout << "failed to bind to port: " << writePort << endl;
-			if (initConSok(readPort) == -1)
+			if (initConSok(readPort, iter->first) == -1)
 				cout << "failed to connect to port: " << readPort << endl; // this setup will need to be repeated until all sockets are connected. 
 		}	
 
@@ -203,7 +203,7 @@ int setupSockets()
 	return 1;
 }
 
-SOCKET initLisSok(int port)
+int initLisSok(int port, char router)
 {
 	int iResult;
 	u_long nonblock = 1;
@@ -213,27 +213,27 @@ SOCKET initLisSok(int port)
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
-		return NULL;
+		return -1;
 
-	SOCKET sok = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sok == INVALID_SOCKET)
-		return NULL;
+	table[router].sendSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (table[router].sendSocket == INVALID_SOCKET)
+		return -1;
 
-	iResult = ioctlsocket(sok, FIONBIO, &nonblock);
+	iResult = ioctlsocket(table[router].sendSocket, FIONBIO, &nonblock);
 	if (iResult == SOCKET_ERROR)
-		return NULL;
+		return -1;
 
-	iResult = bind(sok, (PSOCKADDR)&addr, sizeof(addr));
+	iResult = bind(table[router].sendSocket, (PSOCKADDR)&addr, sizeof(addr));
 	if (iResult == SOCKET_ERROR)
-		return NULL;
+		return -1;
 	
-	listen(sok, 5);
-	FD_SET(sok, &masterWrite);
+	listen(table[router].sendSocket, 5);
+	FD_SET(table[router].sendSocket, &masterWrite);
 
-	return sok;
+	return 1;
 }
 
-SOCKET initConSok(int port)
+int initConSok(int port, char router)
 {
 	int iResult;
 	u_long nonblock = 1;
@@ -243,20 +243,21 @@ SOCKET initConSok(int port)
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
-		return NULL;
+		return -1;
 
-	SOCKET sok = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sok == INVALID_SOCKET)
-		return NULL;
+	table[router].listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (table[router].listenSocket == INVALID_SOCKET)
+		return -1;
 
-	iResult = ioctlsocket(sok, FIONBIO, &nonblock);
+	iResult = ioctlsocket(table[router].listenSocket, FIONBIO, &nonblock);
 	if (iResult == SOCKET_ERROR)
-		return NULL;
+		return -1;
 
-	iResult = connect(sok, (PSOCKADDR)&addr, sizeof(addr));
+	iResult = connect(table[router].listenSocket, (PSOCKADDR)&addr, sizeof(addr));
+	FD_SET(table[router].listenSocket, &masterRead);
 	if (iResult == SOCKET_ERROR)
-		return NULL;
-	FD_SET(sok, &masterRead);
-	return sok;
+		return -1;
+	
+	return 1;
 }
 
