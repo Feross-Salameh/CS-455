@@ -81,3 +81,84 @@ int readConfig(wstring foldername)
 
 	return 1;
 }
+
+/*void routerUpdate(string message) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
+{
+	char* strptr = &message[0];
+	string tokenized[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
+	char router_name = '/0';
+
+	for (int i = 0; i < 127; i++) // Populate string array.
+	{
+		strptr = strtok(&message[0], " ");
+		tokenized[i] = strptr;
+	}
+	for (int i = 1; i < 127; i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
+	{
+		if (tokenized[i].empty() == 1) // An empty token means you have no more data to consider.
+			return;
+
+		for (auto& x : table) // find the name of the router table to consider.
+		{
+			if (x.first == tokenized[i][0]) // found it
+			{
+				router_name = x.first;
+				break;
+			}
+		}
+
+		if (router_name == '/0') // The router info is not in the table, it is a new router and cost.
+		{
+			routingEntry newEntry;
+			newEntry.distance = stoi(tokenized[i + 1]);
+			newEntry.nextHop = tokenized[i][0];
+			table.emplace(tokenized[i][0], newEntry);
+			//Still to address is the basePort, portTo, and portFrom of a new router where appropriate.
+		}
+		else // The router exists in the table. It is node = router_name.
+		{
+			if (table[router_name].distance < )
+		}
+			
+
+	}
+
+}; */
+
+void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
+{
+	char* strptr = &message[0];
+	string tokenized[3];
+
+	for (int i = 0; i < 3; i++) // Populate string array.
+	{
+		strptr = strtok(&message[0], " ");
+		tokenized[i] = strptr;
+	}
+
+	table[tokenized[1].front()].distance = stoi(tokenized[2]); // update distance cost with new value from user.
+};
+
+void printRoutingTable(string message) // "User to Host" Print message looks like: "P d" or "P" 
+{
+	char* strptr = &message[0];
+	string tokenized[2];
+	for (int i = 0; i < 3; i++) // Populate string array.
+	{
+		strptr = strtok(&message[0], " ");
+		tokenized[i] = strptr;
+	}
+
+	// Option 1: print P d
+	if (tokenized[1].empty() == 0) // Two parameter passed in with message.
+		cout << tokenized[1].front() << ": " << table[tokenized[1].front()].distance << ' ' << table[tokenized[1].front()].nextHop << endl;
+
+	// Option 2: print whole table
+	else // Only one parameter passed in with message, print the entire table.
+		for (auto& x : table)
+		{
+			cout << x.first << ": " << x.second.distance << ' ' << x.second.nextHop << endl; 
+		}
+	
+	cout << endl;
+};
