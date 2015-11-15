@@ -126,14 +126,24 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 
 	if (updateDistanceVectorTable()) // Update distance vector table to see if a better route exists after new link cost update.
 	{
-		// Generate string message to send out to neighbors
-		// Call sendUpdateMessage.
+		// Generate string updateMessage to send out to neighbors
+		// sendUpdateMessage(updateMessage);
 	}
 };
 
 void sendUpdateMessage(char* message) // Will generate the update message to send out.
 {
 	// Loop through neighbors and send message.
+	for (auto& x : table)
+	{
+		if (x.second.nextHop == 0) // nextHop == 0 means it is a neighbor.
+		{
+			SSIZE_T numBytes = send(x.second.sendSocket, message, strlen(message), 0);
+
+			if (numBytes == -1)
+				cout << "Error sending message to neighbor: " << x.first << ".\n You should do something about that.\n\n";
+		}
+	}
 };
 
 void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
@@ -165,7 +175,7 @@ void linkCostChange(string message) // "User to Host" Link cost message looks li
 	if (updateDistanceVectorTable()) // Update distance vector table to see if a better route exists after new link cost update.
 	{
 		// Generate string message to send out to neighbors
-		// Call sendUpdateMessage.
+		// sendUpdateMessage(updateMessage);
 	}
 };
 
