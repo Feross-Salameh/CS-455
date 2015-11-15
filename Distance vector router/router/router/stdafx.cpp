@@ -87,9 +87,9 @@ int readConfig(wstring foldername)
 	return 1;
 }
 
-void updateDistanceVectorTable(void)
+int updateDistanceVectorTable(void) // returns 1 if need to send update messages to neighbors.
 {
-
+	// Generate "this" nodes distance vector table following new data from L-message or U-message.
 };
 
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
@@ -122,11 +122,16 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 		distanceData[routerName].routingTable[tokstr[i][0]] = stoi(tokstr[i + 1]);
 	}
 
+	if (updateDistanceVectorTable()) // Update distance vector table to see if a better route exists after new link cost update.
+	{
+		// Generate string message to send out to neighbors
+		// Call sendUpdateMessage.
+	}
 };
 
-void sendUpdateMessage()
+void sendUpdateMessage(char* message) // Will generate the update message to send out.
 {
-
+	// Loop through neighbors and send message.
 };
 
 void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
@@ -154,7 +159,12 @@ void linkCostChange(string message) // "User to Host" Link cost message looks li
 	}
 
 	table[tokstr[1].front()].distance = stoi(tokstr[2]); // update distance cost with new value from user.
-	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
+
+	if (updateDistanceVectorTable()) // Update distance vector table to see if a better route exists after new link cost update.
+	{
+		// Generate string message to send out to neighbors
+		// Call sendUpdateMessage.
+	}
 };
 
 void printRoutingTable(string message) // "User to Host" Print message looks like: "P d" or "P" 
@@ -182,16 +192,15 @@ void printRoutingTable(string message) // "User to Host" Print message looks lik
 
 	// Option 1: print P d
 	if (tokstr[1].empty() == 0) // Two parameter passed in with message.
-		cout << tokstr[1].front() << ": " << table[tokstr[1].front()].distance << ' ' << table[tokstr[1].front()].nextHop << endl;
+		cout << tokstr[1].front() << ": " << table[tokstr[1].front()].distance << ' ' << table[tokstr[1].front()].nextHop << endl << endl;
 
 	// Option 2: print whole table
 	else // Only one parameter passed in with message, print the entire table.
 	{
 		for (auto& x : table)
 			cout << x.first << ":" << x.second.distance << " " << x.second.nextHop << endl;
+		cout << endl;
 	}
-	
-	cout << endl;
 };
 
 int setupSockets()
