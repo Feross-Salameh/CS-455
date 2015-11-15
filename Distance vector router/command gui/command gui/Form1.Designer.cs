@@ -29,30 +29,35 @@
         private void InitializeComponent()
         {
             this.lb_processList = new System.Windows.Forms.ListBox();
-            this.btn_terminate = new System.Windows.Forms.Button();
+            this.btn_terminateAll = new System.Windows.Forms.Button();
             this.tb_name = new System.Windows.Forms.TextBox();
             this.cb_poisedReverse = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.btn_startFromFolder = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btn_startSingle = new System.Windows.Forms.Button();
+            this.lb_test = new System.Windows.Forms.Label();
+            this.tb_test = new System.Windows.Forms.TextBox();
+            this.btn_terminateSingle = new System.Windows.Forms.Button();
+            this.btn_print = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lb_processList
             // 
             this.lb_processList.FormattingEnabled = true;
-            this.lb_processList.Location = new System.Drawing.Point(162, 163);
+            this.lb_processList.Location = new System.Drawing.Point(205, 162);
             this.lb_processList.Name = "lb_processList";
-            this.lb_processList.Size = new System.Drawing.Size(182, 303);
+            this.lb_processList.Size = new System.Drawing.Size(139, 303);
             this.lb_processList.TabIndex = 0;
             // 
-            // btn_terminate
+            // btn_terminateAll
             // 
-            this.btn_terminate.Location = new System.Drawing.Point(205, 54);
-            this.btn_terminate.Name = "btn_terminate";
-            this.btn_terminate.Size = new System.Drawing.Size(139, 48);
-            this.btn_terminate.TabIndex = 2;
-            this.btn_terminate.Text = "Terminate";
-            this.btn_terminate.UseVisualStyleBackColor = true;
+            this.btn_terminateAll.Location = new System.Drawing.Point(205, 58);
+            this.btn_terminateAll.Name = "btn_terminateAll";
+            this.btn_terminateAll.Size = new System.Drawing.Size(139, 46);
+            this.btn_terminateAll.TabIndex = 2;
+            this.btn_terminateAll.Text = "Terminate all";
+            this.btn_terminateAll.UseVisualStyleBackColor = true;
+            this.btn_terminateAll.Click += new System.EventHandler(this.btn_terminateAll_Click);
             // 
             // tb_name
             // 
@@ -64,7 +69,7 @@
             // cb_poisedReverse
             // 
             this.cb_poisedReverse.AutoSize = true;
-            this.cb_poisedReverse.Location = new System.Drawing.Point(12, 396);
+            this.cb_poisedReverse.Location = new System.Drawing.Point(12, 309);
             this.cb_poisedReverse.Name = "cb_poisedReverse";
             this.cb_poisedReverse.Size = new System.Drawing.Size(101, 17);
             this.cb_poisedReverse.TabIndex = 4;
@@ -82,7 +87,7 @@
             // 
             // btn_startFromFolder
             // 
-            this.btn_startFromFolder.Location = new System.Drawing.Point(12, 56);
+            this.btn_startFromFolder.Location = new System.Drawing.Point(12, 58);
             this.btn_startFromFolder.Name = "btn_startFromFolder";
             this.btn_startFromFolder.Size = new System.Drawing.Size(139, 46);
             this.btn_startFromFolder.TabIndex = 6;
@@ -90,26 +95,67 @@
             this.btn_startFromFolder.UseVisualStyleBackColor = true;
             this.btn_startFromFolder.Click += new System.EventHandler(this.btn_startFromFolder_Click);
             // 
-            // button1
+            // btn_startSingle
             // 
-            this.button1.Location = new System.Drawing.Point(40, 169);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 7;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
+            this.btn_startSingle.Location = new System.Drawing.Point(12, 110);
+            this.btn_startSingle.Name = "btn_startSingle";
+            this.btn_startSingle.Size = new System.Drawing.Size(139, 46);
+            this.btn_startSingle.TabIndex = 7;
+            this.btn_startSingle.Text = "Start Single Process";
+            this.btn_startSingle.UseVisualStyleBackColor = true;
+            this.btn_startSingle.Click += new System.EventHandler(this.btn_startSingle_Click);
+            // 
+            // lb_test
+            // 
+            this.lb_test.AutoSize = true;
+            this.lb_test.Location = new System.Drawing.Point(9, 429);
+            this.lb_test.Name = "lb_test";
+            this.lb_test.Size = new System.Drawing.Size(57, 13);
+            this.lb_test.TabIndex = 8;
+            this.lb_test.Text = "Test folder";
+            // 
+            // tb_test
+            // 
+            this.tb_test.Location = new System.Drawing.Point(12, 445);
+            this.tb_test.Name = "tb_test";
+            this.tb_test.Size = new System.Drawing.Size(109, 20);
+            this.tb_test.TabIndex = 9;
+            // 
+            // btn_terminateSingle
+            // 
+            this.btn_terminateSingle.Location = new System.Drawing.Point(205, 110);
+            this.btn_terminateSingle.Name = "btn_terminateSingle";
+            this.btn_terminateSingle.Size = new System.Drawing.Size(139, 46);
+            this.btn_terminateSingle.TabIndex = 10;
+            this.btn_terminateSingle.Text = "Terminate single";
+            this.btn_terminateSingle.UseVisualStyleBackColor = true;
+            this.btn_terminateSingle.Click += new System.EventHandler(this.btn_terminateSingle_Click);
+            // 
+            // btn_print
+            // 
+            this.btn_print.Location = new System.Drawing.Point(12, 162);
+            this.btn_print.Name = "btn_print";
+            this.btn_print.Size = new System.Drawing.Size(139, 44);
+            this.btn_print.TabIndex = 11;
+            this.btn_print.Text = "Print table";
+            this.btn_print.UseVisualStyleBackColor = true;
+            this.btn_print.Click += new System.EventHandler(this.btn_print_Click);
             // 
             // starter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(372, 494);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btn_print);
+            this.Controls.Add(this.btn_terminateSingle);
+            this.Controls.Add(this.tb_test);
+            this.Controls.Add(this.lb_test);
+            this.Controls.Add(this.btn_startSingle);
             this.Controls.Add(this.btn_startFromFolder);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cb_poisedReverse);
             this.Controls.Add(this.tb_name);
-            this.Controls.Add(this.btn_terminate);
+            this.Controls.Add(this.btn_terminateAll);
             this.Controls.Add(this.lb_processList);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "starter";
@@ -122,12 +168,16 @@
         #endregion
 
         private System.Windows.Forms.ListBox lb_processList;
-        private System.Windows.Forms.Button btn_terminate;
+        private System.Windows.Forms.Button btn_terminateAll;
         private System.Windows.Forms.TextBox tb_name;
         private System.Windows.Forms.CheckBox cb_poisedReverse;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btn_startFromFolder;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btn_startSingle;
+        private System.Windows.Forms.Label lb_test;
+        private System.Windows.Forms.TextBox tb_test;
+        private System.Windows.Forms.Button btn_terminateSingle;
+        private System.Windows.Forms.Button btn_print;
     }
 }
 

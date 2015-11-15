@@ -9,13 +9,15 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 
 namespace command_gui
 {
     public partial class starter : Form
     {
-        List<Process> routerList = new List<Process>();
         Dictionary<char, Process> routerDictionary = new Dictionary<char, Process>();
+        string folder = "test1";
         public starter()
         {
             InitializeComponent();
@@ -32,6 +34,10 @@ namespace command_gui
             string name = tb_name.Text;
             string path = "";
             bool check = cb_poisedReverse.Checked;
+            foreach (KeyValuePair<char, Process> entry in routerDictionary)
+                entry.Value.Kill();
+            routerDictionary.Clear();
+            lb_processList.DataSource = null;
             using (FolderBrowserDialog fbd = new FolderBrowserDialog())
             {
                 fbd.SelectedPath = Directory.GetCurrentDirectory();
@@ -39,6 +45,8 @@ namespace command_gui
                 {
                     path = fbd.SelectedPath;
                 }
+                else
+                    return;
             }
             Directory.SetCurrentDirectory(path);
             string[] paths = Directory.GetFiles(path);
@@ -53,11 +61,11 @@ namespace command_gui
                     Process newProc = new Process();
                     Directory.SetCurrentDirectory("..\\..\\router\\Debug\\");
                     newProc.StartInfo.FileName = Directory.GetCurrentDirectory() + "\\router.exe";
-                    // newProc.StartInfo.FileName = @"C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\Distance vector router\router\Debug\router.exe";
                     newProc.StartInfo.WorkingDirectory = "..\\..\\router\\Debug\\";
                     if (check)
                         newProc.StartInfo.Arguments = " -p";
                     newProc.StartInfo.Arguments += " " + tok[tok.Length - 2] + " ";
+                    folder = tok[tok.Length - 2];
                     newProc.StartInfo.Arguments += file[0].ToString();
                     newProc.Start();
                     routerDictionary[file[0]] = newProc;
@@ -66,6 +74,107 @@ namespace command_gui
                     lb_processList.ValueMember = "Value";
                     
                 }
+            }
+        }
+
+        private void btn_startSingle_Click(object sender, EventArgs e)
+        {
+            if(tb_test.Text.Trim() == "")
+            {
+                MessageBox.Show("Test folder name is emply");
+                return;
+            }
+            if(tb_name.Text.Trim() == "")
+            {
+                MessageBox.Show("Name text is emply.");
+                return;
+            }
+            Process newProc = new Process();
+            try
+            {
+                Directory.SetCurrentDirectory("..\\..\\..\\..\\router\\Debug\\");
+            }
+            catch { }
+            newProc.StartInfo.FileName = Directory.GetCurrentDirectory() + "\\router.exe";
+            newProc.StartInfo.WorkingDirectory = "..\\..\\router\\Debug\\";
+            if (cb_poisedReverse.Checked)
+                newProc.StartInfo.Arguments = " -p";
+            newProc.StartInfo.Arguments += " " + tb_test.Text.Trim() + " ";
+            folder = tb_test.Text.Trim();
+            newProc.StartInfo.Arguments += tb_name.Text.Trim()[0];
+            newProc.Start();
+            routerDictionary[tb_name.Text.Trim()[0]] = newProc;
+            lb_processList.DataSource = new BindingSource(routerDictionary, null);
+            lb_processList.DisplayMember = "Key";
+            lb_processList.ValueMember = "Value";
+        }
+
+        private void btn_terminateAll_Click(object sender, EventArgs e)
+        {
+            if(routerDictionary.Count == 0)
+            {
+                MessageBox.Show("No routers to terminate.");
+                return;
+            }
+            foreach (KeyValuePair<char, Process> entry in routerDictionary)
+                entry.Value.Kill();
+            routerDictionary.Clear();
+            lb_processList.DataSource = null;
+        }
+
+        private void btn_terminateSingle_Click(object sender, EventArgs e)
+        {
+            if (routerDictionary.Count == 0)
+            {
+                MessageBox.Show("No routers to terminate.");
+                return;
+            }
+            KeyValuePair<char, Process> entry = (KeyValuePair<char, Process>)lb_processList.SelectedItem;
+            routerDictionary[entry.Key].Kill();
+            routerDictionary.Remove(entry.Key);
+            lb_processList.DataSource = new BindingSource(routerDictionary, null);
+            lb_processList.DisplayMember = "Key";
+            lb_processList.ValueMember = "Value";
+        }
+
+        private void btn_print_Click(object sender, EventArgs e)
+        {
+            if (routerDictionary.Count == 0)
+            {
+                MessageBox.Show("No routers to print routing table.");
+                return;
+            }
+            int port = -1;
+            char router = ((KeyValuePair<char, Process>)lb_processList.SelectedItem).Key;
+            string[] lines = File.ReadAllLines("..\\..\\proj2-skeleton\\" + folder + "\\routers");
+            foreach(string str in lines)
+            {
+                string[] tok = str.Split(' ');
+                if(tok[0][0] == router)
+                {
+                    port = Int32.Parse(tok[2]);
+                    break;
+                }
+            }
+            if(port == -1)
+            {
+                MessageBox.Show("Could not find router in routers file.");
+                return;
+            }
+            IPAddress address = IPAddress.Parse("127.0.0.1");
+            IPEndPoint endPoint = new IPEndPoint(address, port);
+            Socket printSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            try
+            {
+                printSocket.Connect(endPoint);
+                Byte[] printRequest = Encoding.ASCII.GetBytes("P");
+                printSocket.Send(printRequest);
+                printSocket.Shutdown(SocketShutdown.Both);
+                printSocket.Close();
+            }
+            catch (Exception en)
+            {
+                MessageBox.Show("Unable to connect to router. Error: " + en.ToString());
             }
         }
     }

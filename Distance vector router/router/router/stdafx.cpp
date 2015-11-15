@@ -223,7 +223,7 @@ int setupSockets()
 	{
 		routingEntry temp = iter->second;
 		//setting up all the sockets needed for reading/writing
-		if (table[name].basePort != temp.basePort)  // no need to calculate own ports
+		if ((table[name].basePort != temp.basePort) && (temp.portFrom != -1))  // no need to calculate own ports
 		{ 
 			int readPort, writePort;
 			writePort = table[name].basePort + temp.portTo;
