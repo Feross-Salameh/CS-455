@@ -46,14 +46,19 @@ namespace command_gui
             {
                 string[] tok = str.Split('\\');
                 string file = tok.Last();
-
-                Process newProc = new Process();
-                newProc.StartInfo.FileName = "..\\..\\..\\..\\router\\Debug\\router.exe";
-                newProc.StartInfo.Arguments = file[0].ToString();
-                newProc.StartInfo.Arguments += ;
-                if (check)
-                    newProc.StartInfo.Arguments += " -p";
-                
+                string[] fileSplt = file.Split('.');
+                if (fileSplt.Last() == "cfg")
+                {
+                    Process newProc = new Process();
+                    newProc.StartInfo.FileName = @"C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\Distance vector router\router\Debug\router.exe";
+                    newProc.StartInfo.WorkingDirectory = "..\\..\\..\\..\\router\\Debug\\";
+                    if (check)
+                        newProc.StartInfo.Arguments = " -p";
+                    newProc.StartInfo.Arguments += " " + tok[tok.Length - 2] + " ";
+                    newProc.StartInfo.Arguments += file[0].ToString();
+                    newProc.Start();
+                    routerList.Add(newProc);
+                }
             }
         }
     }

@@ -11,15 +11,29 @@ extern fd_set read; // used when calling select
 extern map<char, routingEntry> table; //this will contain the distance vector routing table.
 int main(int argc, char *argv[])
 {
-	name = argv[1][0];
-	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-	wstring testFolder = converter.from_bytes(argv[2]);
-	readConfig(testFolder);
-	cout << "Reading config files successful" << endl;
-
+	
+	if (argc == 4)
+	{
+		name = argv[3][0];
+		cout << "started router " << name << endl;
+		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+		wstring testFolder = converter.from_bytes(argv[2]);
+		readConfig(testFolder);
+		cout << "Reading config files successful" << endl;
+	}
+	else
+	{
+		name = argv[2][0];
+		cout << "started router " << name << endl;
+		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+		wstring testFolder = converter.from_bytes(argv[1]);
+		readConfig(testFolder);
+		cout << "Reading config files successful" << endl;
+	}
 	setupSockets();
-
-
+	char inp;
+	cin >> inp;
+	
     return 0;
 }
 
