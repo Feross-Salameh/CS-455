@@ -34,6 +34,7 @@
             this.tb_name = new System.Windows.Forms.TextBox();
             this.cb_poisedReverse = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.btn_startFromFolder = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lb_processList
@@ -50,8 +51,9 @@
             this.btn_start.Name = "btn_start";
             this.btn_start.Size = new System.Drawing.Size(139, 48);
             this.btn_start.TabIndex = 1;
-            this.btn_start.Text = "Start";
+            this.btn_start.Text = "Start Single Proces";
             this.btn_start.UseVisualStyleBackColor = true;
+            this.btn_start.Click += new System.EventHandler(this.btn_start_Click);
             // 
             // btn_terminate
             // 
@@ -64,7 +66,7 @@
             // 
             // tb_name
             // 
-            this.tb_name.Location = new System.Drawing.Point(12, 205);
+            this.tb_name.Location = new System.Drawing.Point(12, 370);
             this.tb_name.Name = "tb_name";
             this.tb_name.Size = new System.Drawing.Size(109, 20);
             this.tb_name.TabIndex = 3;
@@ -72,7 +74,7 @@
             // cb_poisedReverse
             // 
             this.cb_poisedReverse.AutoSize = true;
-            this.cb_poisedReverse.Location = new System.Drawing.Point(12, 231);
+            this.cb_poisedReverse.Location = new System.Drawing.Point(12, 396);
             this.cb_poisedReverse.Name = "cb_poisedReverse";
             this.cb_poisedReverse.Size = new System.Drawing.Size(101, 17);
             this.cb_poisedReverse.TabIndex = 4;
@@ -82,17 +84,28 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 189);
+            this.label1.Location = new System.Drawing.Point(9, 354);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(76, 13);
             this.label1.TabIndex = 5;
             this.label1.Text = "Process Name";
+            // 
+            // btn_startFromFolder
+            // 
+            this.btn_startFromFolder.Location = new System.Drawing.Point(12, 163);
+            this.btn_startFromFolder.Name = "btn_startFromFolder";
+            this.btn_startFromFolder.Size = new System.Drawing.Size(139, 46);
+            this.btn_startFromFolder.TabIndex = 6;
+            this.btn_startFromFolder.Text = "Start From Folder";
+            this.btn_startFromFolder.UseVisualStyleBackColor = true;
+            this.btn_startFromFolder.Click += new System.EventHandler(this.btn_startFromFolder_Click);
             // 
             // starter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(372, 494);
+            this.Controls.Add(this.btn_startFromFolder);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cb_poisedReverse);
             this.Controls.Add(this.tb_name);
@@ -115,6 +128,7 @@
         private System.Windows.Forms.TextBox tb_name;
         private System.Windows.Forms.CheckBox cb_poisedReverse;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btn_startFromFolder;
     }
 }
 
