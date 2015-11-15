@@ -37,9 +37,7 @@ using namespace std;
 typedef struct myStruct 
 {
 	int distance = INF; //distance to spesific router
-	int oldDistance = -1; // old distance
 	char nextHop = 0; // the Router to tavel to next. 
-	char oldHop = 0; // old nexthop, used for node bnreaking
 	int portTo = -1; // first number after cost
 	int portFrom = -1; // second number after cost
 	int basePort = -1; 
@@ -48,11 +46,13 @@ typedef struct myStruct
 
 }routingEntry; 
 
-typedef struct distanceVectorTableEntry
+typedef struct otherRoutersDistanceTable
 {
-	char name = 0;
-	int distance = INF; //distance to specific router
+	char name = 0; // Name of the "other" router.
+	map<char, int> routingTable; // distance (int) to another router (char) from "other" router.
 };
+
+typedef struct thisRouterDistanceTableEntry
 
 // functions prototypes
 
@@ -75,7 +75,6 @@ int setupSockets();
 	NOTE: this function was designed to only be called from the setupSockets() function. Since setupSockets will initilize the WSUDATA
 */
 int initLisSok(int port, char router);
-
 
 /*
 	Will initilize and setup a socket to bind to a certain port, then will add the socket to the masterRead fd_set. will also return the socket

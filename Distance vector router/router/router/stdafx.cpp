@@ -10,8 +10,8 @@ fd_set masterRead; // contains all sockets for reading
 fd_set masterWrite; // contains all sockets for writing
 fd_set read; // used when calling select
 fd_set write; // used when calling select
-map<char, routingEntry> table; //this will contain the distance vector routing table.
-map<char, distanceVectorTableEntry> neighborsDistanceData; // Each neighbor to the operating router will have an associated neighborsDistanceData map
+map<char, routingEntry> table; // This will contain the distance vector routing table for "this" router.
+map<char, otherRoutersDistanceTable> distanceData; // All neighboring routers will have a table of distance data and be in this map.
 WSADATA wsaData;
 
 int readConfig(wstring foldername)
@@ -87,86 +87,109 @@ int readConfig(wstring foldername)
 	return 1;
 }
 
+void updateDistanceVectorTable(void)
+{
 
-/*void routerUpdate(string message) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
+};
+
+void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 {
 	char* strptr = &message[0];
-	string tokenized[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
+	string tokstr[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
 	char router_name = '/0';
 
 	for (int i = 0; i < 127; i++) // Populate string array.
 	{
-		strptr = strtok(&message[0], " ");
-		tokenized[i] = strptr;
+		strptr = strtok_s(&message[0], " ", NULL);
+		tokstr[i] = strptr;
+
+		if (i == 0 && tokstr[i][0] != 'U') // Basic error checking, this should never be true.
+		{
+			cout << "Something is wrong. The router update function was called.\nBut the message does not contain a router update message header." << endl;
+			return;
+		}
 	}
+
+	//map<char, otherRoutersDistanceTable> distanceData;
+	distanceData[routerName].routingTable.clear(); // Clear out old data to be repopulated.
+	distanceData[routerName].name = routerName;
+
 	for (int i = 1; i < 127; i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
 	{
-		if (tokenized[i].empty() == 1) // An empty token means you have no more data to consider.
+		if (tokstr[i].empty() == 1) // An empty token means you have no more data to consider.
 			return;
 
-		for (auto& x : table) // find the name of the router table to consider.
-		{
-			if (x.first == tokenized[i][0]) // found it
-			{
-				router_name = x.first;
-				break;
-			}
-		}
-
-		if (router_name == '/0') // The router info is not in the table, it is a new router and cost.
-		{
-			routingEntry newEntry;
-			newEntry.distance = stoi(tokenized[i + 1]);
-			newEntry.nextHop = tokenized[i][0];
-			table.emplace(tokenized[i][0], newEntry);
-			//Still to address is the basePort, portTo, and portFrom of a new router where appropriate.
-		}
-		else // The router exists in the table. It is node = router_name.
-		{
-			if (table[router_name].distance < )
-		}
-			
-
+		distanceData[routerName].routingTable[tokstr[i][0]] = stoi(tokstr[i + 1]);
 	}
 
-}; */
+};
+
+void sendUpdateMessage()
+{
+
+};
 
 void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
 {
 	char* strptr = &message[0];
 	char *context = NULL;
-	string tokenized[3];
+	string tokstr[3];
 
 	for (int i = 0; i < 3; i++) // Populate string array.
 	{
 		strptr = strtok_s(&message[0], " ", &context);
-		tokenized[i] = strptr;
+		tokstr[i] = strptr;
+
+		if (i == 0 && tokstr[i][0] != 'L') // Basic error checking, this should never be true.
+		{
+			cout << "Something is wrong. The link cost change function was called.\nBut the message does not contain a link cost change message header." << endl;
+			return;
+		}
+
+		if ((i == 1 || i == 2) && tokstr[i].empty == 1) // Basic error checking, this should never be true.
+		{
+			cout << "Something is wrong. The link cost change function was called.\nBut the message is not a complete link cost change message." << endl;
+			return;
+		}
 	}
 
-	table[tokenized[1].front()].distance = stoi(tokenized[2]); // update distance cost with new value from user.
+	table[tokstr[1].front()].distance = stoi(tokstr[2]); // update distance cost with new value from user.
+	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 };
 
 void printRoutingTable(string message) // "User to Host" Print message looks like: "P d" or "P" 
 {
 	char* strptr = &message[0];
 	char *context = NULL;
-	string tokenized[2];
+	string tokstr[2];
 	for (int i = 0; i < 3; i++) // Populate string array.
 	{
 		strptr = strtok_s(&message[0], " ", &context);
-		tokenized[i] = strptr;
+		tokstr[i] = strptr;
+
+		if (i == 0 && tokstr[i][0] != 'P') // Basic error checking, this should never be true.
+		{
+			cout << "Something is wrong. The print routing table function was called.\nBut the message does not contain a print table message header." << endl;
+			return;
+		}
+
+		if (i == 1 && tokstr[i].empty == 1) // Basic error checking, this should never be true.
+		{
+			cout << "Something is wrong. The print routing table function was called.\nBut the message is not a complete print table message." << endl;
+			return;
+		}
 	}
 
 	// Option 1: print P d
-	if (tokenized[1].empty() == 0) // Two parameter passed in with message.
-		cout << tokenized[1].front() << ": " << table[tokenized[1].front()].distance << ' ' << table[tokenized[1].front()].nextHop << endl;
+	if (tokstr[1].empty() == 0) // Two parameter passed in with message.
+		cout << tokstr[1].front() << ": " << table[tokstr[1].front()].distance << ' ' << table[tokstr[1].front()].nextHop << endl;
 
 	// Option 2: print whole table
 	else // Only one parameter passed in with message, print the entire table.
+	{
 		for (auto& x : table)
-		{
-			cout << x.first << ": " << x.second.distance << ' ' << x.second.nextHop << endl; 
-		}
+			cout << x.first << ":" << x.second.distance << " " << x.second.nextHop << endl;
+	}
 	
 	cout << endl;
 };
