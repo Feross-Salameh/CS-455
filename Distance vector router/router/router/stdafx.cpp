@@ -11,7 +11,9 @@ fd_set masterWrite; // contains all sockets for writing
 fd_set read; // used when calling select
 fd_set write; // used when calling select
 map<char, routingEntry> table; //this will contain the distance vector routing table.
+map<char, distanceVectorTableEntry> neighborsDistanceData; // Each neighbor to the operating router will have an associated neighborsDistanceData map
 WSADATA wsaData;
+
 int readConfig(wstring foldername)
 {
 	wstring dir = L"..\\..\\proj2-skeleton\\";

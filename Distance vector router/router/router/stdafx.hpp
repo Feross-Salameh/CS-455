@@ -48,6 +48,11 @@ typedef struct myStruct
 
 }routingEntry; 
 
+typedef struct distanceVectorTableEntry
+{
+	char name = 0;
+	int distance = INF; //distance to specific router
+};
 
 // functions prototypes
 
