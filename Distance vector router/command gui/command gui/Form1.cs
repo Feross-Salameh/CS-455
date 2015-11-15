@@ -15,6 +15,7 @@ namespace command_gui
     public partial class starter : Form
     {
         List<Process> routerList = new List<Process>();
+        Dictionary<char, Process> routerDictionary = new Dictionary<char, Process>();
         public starter()
         {
             InitializeComponent();
@@ -50,14 +51,20 @@ namespace command_gui
                 if (fileSplt.Last() == "cfg")
                 {
                     Process newProc = new Process();
-                    newProc.StartInfo.FileName = @"C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\Distance vector router\router\Debug\router.exe";
-                    newProc.StartInfo.WorkingDirectory = "..\\..\\..\\..\\router\\Debug\\";
+                    Directory.SetCurrentDirectory("..\\..\\router\\Debug\\");
+                    newProc.StartInfo.FileName = Directory.GetCurrentDirectory() + "\\router.exe";
+                    // newProc.StartInfo.FileName = @"C:\Users\Feross Salameh\Dropbox\CS 455\Projects\CS-455\Distance vector router\router\Debug\router.exe";
+                    newProc.StartInfo.WorkingDirectory = "..\\..\\router\\Debug\\";
                     if (check)
                         newProc.StartInfo.Arguments = " -p";
                     newProc.StartInfo.Arguments += " " + tok[tok.Length - 2] + " ";
                     newProc.StartInfo.Arguments += file[0].ToString();
                     newProc.Start();
-                    routerList.Add(newProc);
+                    routerDictionary[file[0]] = newProc;
+                    lb_processList.DataSource = new BindingSource(routerDictionary, null);
+                    lb_processList.DisplayMember = "Key";
+                    lb_processList.ValueMember = "Value";
+                    
                 }
             }
         }

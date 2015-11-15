@@ -11,7 +11,6 @@ extern fd_set read; // used when calling select
 extern map<char, routingEntry> table; //this will contain the distance vector routing table.
 int main(int argc, char *argv[])
 {
-	
 	if (argc == 4)
 	{
 		name = argv[3][0];

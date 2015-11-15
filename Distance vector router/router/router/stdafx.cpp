@@ -90,6 +90,8 @@ int readConfig(wstring foldername)
 int updateDistanceVectorTable(void) // returns 1 if need to send update messages to neighbors.
 {
 	// Generate "this" nodes distance vector table following new data from L-message or U-message.
+
+	return 0;
 };
 
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
@@ -151,7 +153,7 @@ void linkCostChange(string message) // "User to Host" Link cost message looks li
 			return;
 		}
 
-		if ((i == 1 || i == 2) && tokstr[i].empty == 1) // Basic error checking, this should never be true.
+		if ((i == 1 || i == 2) && tokstr[i].empty() == 1) // Basic error checking, this should never be true.
 		{
 			cout << "Something is wrong. The link cost change function was called.\nBut the message is not a complete link cost change message." << endl;
 			return;
@@ -183,7 +185,7 @@ void printRoutingTable(string message) // "User to Host" Print message looks lik
 			return;
 		}
 
-		if (i == 1 && tokstr[i].empty == 1) // Basic error checking, this should never be true.
+		if (i == 1 && tokstr[i].empty() == 1) // Basic error checking, this should never be true.
 		{
 			cout << "Something is wrong. The print routing table function was called.\nBut the message is not a complete print table message." << endl;
 			return;

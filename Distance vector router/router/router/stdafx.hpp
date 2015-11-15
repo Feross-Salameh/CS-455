@@ -50,9 +50,9 @@ typedef struct otherRoutersDistanceTable
 {
 	char name = 0; // Name of the "other" router.
 	map<char, int> routingTable; // distance (int) to another router (char) from "other" router.
-};
+}thisRouterDistanceTableEntry;
 
-typedef struct thisRouterDistanceTableEntry
+//typedef struct thisRouterDistanceTableEntry;
 
 // functions prototypes
 
