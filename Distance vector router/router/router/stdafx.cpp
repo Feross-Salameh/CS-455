@@ -11,7 +11,7 @@ fd_set masterWrite; // contains all sockets for writing
 fd_set read; // used when calling select
 fd_set write; // used when calling select
 map<char, routingEntry> table; // This will contain the distance vector routing table for "this" router.
-map<char, otherRoutersDistanceTable> distanceData; // All neighboring routers will have a table of distance data and be in this map.
+map<char, routersDistanceTable> distanceData; // All neighboring routers will have a table of distance data and be in this map.
 WSADATA wsaData;
 
 int readConfig(wstring foldername)
@@ -122,7 +122,7 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 		if (tokstr[i].empty() == 1) // An empty token means you have no more data to consider.
 			return;
 
-		distanceData[routerName].routingTable[tokstr[i][0]] = stoi(tokstr[i + 1]);
+		distanceData[routerName].routingTable[tokstr[i][0]].cost = stoi(tokstr[i + 1]);
 	}
 
 	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
