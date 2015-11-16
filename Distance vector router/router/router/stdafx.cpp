@@ -87,12 +87,23 @@ int readConfig(wstring foldername)
 	return 1;
 }
 
-int updateDistanceVectorTable(void) // returns 1 if need to send update messages to neighbors.
+void updateDistanceVectorTable(void) // returns 1 if need to send update messages to neighbors.
 {
+	bool send = false;
 	// Generate "this" nodes distance vector table following new data from L-message or U-message.
-	// Generate string message to send out to neighbors
-	// sendUpdateMessage(updateMessage);
-	return 0;
+
+
+	
+	
+	
+	
+	if (send) // Generate string message to send out to neighbors
+	{
+		char updateMessage[253] = { 0 }; // 'U' + 63*4char groups of " dn costn" =  253
+		generateUMessage(updateMessage);
+		sendUpdateMessage(updateMessage);
+	}
+	// else on the next routine, U message sent, the new vector table will be dispersed.
 }
 
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
@@ -128,12 +139,45 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 }
 
+void generateUMessage(char* message)
+{
+	message[0] = 'U';
+	char c = 'a', *j;
+
+	for (int i = 1; i < 253; i += 4)
+	{
+		while (table.count(c) == 0) // scans table for this index element until 'c' value is found. Stop when that routing index exists.
+		{
+			c++;
+			if (table.size < c - 97)
+			{
+				c = -1;
+				break;
+			}
+		}
+		if (c != -1) // end of table, blank out rest of message.
+		{
+			message[i] = ' ';
+			message[i + 1] = ' ';
+			message[i + 2] = ' ';
+			message[i + 3] = ' ';
+		}
+		else // not at end of table, keep populating message with pertinent information.
+		{
+			message[i] = ' ';
+			message[i + 1] = c;
+			message[i + 2] = ' ';
+			message[i + 3] = *itoa(table[c].distance, j, 10);
+		}
+	}
+}
+
 void sendUpdateMessage(char* message) // Will generate the update message to send out.
 {
 	// Loop through neighbors and send message.
 	for (auto& x : table)
 	{
-		if (x.second.nextHop == 0) // nextHop == 0 means it is a neighbor.
+		if (x.second.nextHop == x.first) // nextHop == send-to router means it is a neighbor.
 		{
 			SSIZE_T numBytes = send(x.second.sendSocket, message, strlen(message), 0);
 

@@ -75,7 +75,7 @@ int readConfig(wstring foldername);
 	Will return 1 if creating of all sockets successful. Otherwise return -1;
 */
 
-int updateDistanceVectorTable(void);// returns 1 if need to send update messages to neighbors.
+void updateDistanceVectorTable(void);// returns 1 if need to send update messages to neighbors.
 /*
 	Handler for the distance vector table algorithm. This is called after 'L' or 'U' messages.
 */
@@ -83,6 +83,10 @@ int updateDistanceVectorTable(void);// returns 1 if need to send update messages
 void routerUpdate(string message, char routerName); 
 /*
 	Handler for U-messages. "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
+*/
+void generateUMessage(char* message);
+/*
+	Creates a message at pointer passed that meets U-message format based on this routers vector distance format.
 */
 
 void sendUpdateMessage(char* message);
