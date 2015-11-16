@@ -36,8 +36,9 @@ using namespace std;
 // Each router used will have it's own entry, including the router itself.
 typedef struct myStruct 
 {
-	int distance = INF; //distance to spesific router
-	char nextHop = 0; // the Router to tavel to next. 
+	int distance = INF; //distance to specific router
+	int routingDistance = INF; // distance to route messages. The default value for this will be "distance" unless a quicker route is found.
+	char nextHop = 0; // the Router to travel to next. 
 	int portTo = -1; // first number after cost
 	int portFrom = -1; // second number after cost
 	int basePort = -1; 

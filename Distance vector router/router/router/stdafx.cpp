@@ -87,23 +87,28 @@ int readConfig(wstring foldername)
 	return 1;
 }
 
-void updateDistanceVectorTable(void) // returns 1 if need to send update messages to neighbors.
+void updateDistanceVectorTable(void)
 {
-	bool send = false;
-	// Generate "this" nodes distance vector table following new data from L-message or U-message.
-
-
-	
-	
-	
-	
-	if (send) // Generate string message to send out to neighbors
+	// Generate "this" nodes distance vector table after receiving new data from L-message or U-message.
+	for (auto& y : distanceData) // Increment through distanceData tables for shorter routes.
 	{
-		char updateMessage[253] = { 0 }; // 'U' + 63*4char groups of " dn costn" =  253
-		generateUMessage(updateMessage);
-		sendUpdateMessage(updateMessage);
+		if (table[y.first].distance != INF) // It's a neighbor. Update this routers table based on neighbors distanceData.
+		{
+			for (auto& z : y.second.routingTable)
+			{
+				if (table[z.first].routingDistance > z.second.cost + table[z.second.nextHop].distance)
+				{
+					table[z.first].routingDistance = z.second.cost + table[z.second.nextHop].distance;
+					table[z.first].nextHop = z.second.nextHop;
+				}
+			}
+		}
+		// else not a neighbor. You can't directly access this router's distanceData table make decisions on routing.
 	}
-	// else on the next routine, U message sent, the new vector table will be dispersed.
+
+	char updateMessage[253] = { 0 }; // 'U' + 63*4char groups of " dn costn" =  253
+	generateUMessage(updateMessage);
+	sendUpdateMessage(updateMessage);
 }
 
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
@@ -142,18 +147,16 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 void generateUMessage(char* message)
 {
 	message[0] = 'U';
-	char c = 'a', *j;
+	char c = 'A', *j;
 
 	for (int i = 1; i < 253; i += 4)
 	{
 		while (table.count(c) == 0) // scans table for this index element until 'c' value is found. Stop when that routing index exists.
 		{
-			c++;
-			if (table.size < c - 97)
-			{
-				c = -1;
+			if (table.size < c - 65) // 'A' == 65. If router A's table size is 5 (B,C,D,E, & F) and you hit c == 'G' == 71, c - 65 = 6, out of bounds.
 				break;
-			}
+			else
+				c++;
 		}
 		if (c != -1) // end of table, blank out rest of message.
 		{
@@ -203,6 +206,11 @@ void linkCostChange(string message) // "User to Host" Link cost message looks li
 			cout << "Something is wrong. The link cost change function was called.\nBut the message does not contain a link cost change message header." << endl;
 			return;
 		}
+		if (i == 1 && name == tokstr[i][0])
+		{
+			cout << "Invalid Link message content. You are attempting to create an entry for this router in it's own table. " << endl;
+			return;
+		}
 
 		if ((i == 1 || i == 2) && tokstr[i].empty() == 1) // Basic error checking, this should never be true.
 		{
@@ -237,6 +245,12 @@ void printRoutingTable(string message) // "User to Host" Print message looks lik
 			cout << "Something is wrong. The print routing table function was called.\nBut the message is not a complete print table message." << endl;
 			return;
 		}
+	}
+
+	if (table.find(tokstr[1][0]) == table.end()) // The table entry to print does not exist.
+	{
+		cout << "The entry you desire to have printed does not exist in the table." << endl;
+		return;
 	}
 
 	// Option 1: print P d
