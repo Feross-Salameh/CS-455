@@ -92,7 +92,7 @@ int updateDistanceVectorTable(void) // returns 1 if need to send update messages
 	// Generate "this" nodes distance vector table following new data from L-message or U-message.
 
 	return 0;
-};
+}
 
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 {
@@ -129,7 +129,7 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 		// Generate string updateMessage to send out to neighbors
 		// sendUpdateMessage(updateMessage);
 	}
-};
+}
 
 void sendUpdateMessage(char* message) // Will generate the update message to send out.
 {
@@ -144,7 +144,7 @@ void sendUpdateMessage(char* message) // Will generate the update message to sen
 				cout << "Error sending message to neighbor: " << x.first << ".\n You should do something about that.\n\n";
 		}
 	}
-};
+}
 
 void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
 {
@@ -177,7 +177,7 @@ void linkCostChange(string message) // "User to Host" Link cost message looks li
 		// Generate string message to send out to neighbors
 		// sendUpdateMessage(updateMessage);
 	}
-};
+}
 
 void printRoutingTable(string message) // "User to Host" Print message looks like: "P d" or "P" 
 {
@@ -213,7 +213,7 @@ void printRoutingTable(string message) // "User to Host" Print message looks lik
 			cout << x.first << ":" << x.second.distance << " " << x.second.nextHop << endl;
 		cout << endl;
 	}
-};
+}
 
 int setupSockets()
 {

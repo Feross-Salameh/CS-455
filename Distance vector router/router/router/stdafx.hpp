@@ -68,6 +68,32 @@ int readConfig(wstring foldername);
 	setup and configure all of the sokcets required. This will store all of the sockets to the fd_set master.
 	Will return 1 if creating of all sockets successful. Otherwise return -1;
 */
+
+int updateDistanceVectorTable(void);// returns 1 if need to send update messages to neighbors.
+/*
+	Handler for the distance vector table algorithm. This is called after 'L' or 'U' messages.
+*/
+
+void routerUpdate(string message, char routerName); 
+/*
+	Handler for U-messages. "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
+*/
+
+void sendUpdateMessage(char* message);
+/*
+	This function will create a message to be sent of from the router's distance vector table.
+*/
+
+void linkCostChange(string message);
+/*
+	Handler for L-messages. "User to Host" Link cost message looks like: "L n cost"
+*/
+
+void printRoutingTable(string message);
+/*
+	Handler for P-messages. "User to Host" Print message looks like: "P d" or "P" 
+*/
+
 int setupSockets();
 
 /*
