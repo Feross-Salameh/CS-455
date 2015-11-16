@@ -144,6 +144,11 @@ namespace command_gui
                 MessageBox.Show("No routers to print routing table.");
                 return;
             }
+            if(tb_message.Text.Trim() == "")
+            {
+                MessageBox.Show("No message to send");
+                return;
+            }
             int port = -1;
             char router = ((KeyValuePair<char, Process>)lb_processList.SelectedItem).Key;
             string[] lines = File.ReadAllLines("..\\..\\proj2-skeleton\\" + folder + "\\routers");
@@ -167,7 +172,7 @@ namespace command_gui
             try
             {
                 printSocket.Connect(endPoint);
-                Byte[] printRequest = Encoding.ASCII.GetBytes("P");
+                Byte[] printRequest = Encoding.ASCII.GetBytes(tb_message.Text.Trim());
                 printSocket.Send(printRequest);
                 printSocket.Shutdown(SocketShutdown.Both);
                 printSocket.Close();

@@ -39,6 +39,8 @@
             this.tb_test = new System.Windows.Forms.TextBox();
             this.btn_terminateSingle = new System.Windows.Forms.Button();
             this.btn_print = new System.Windows.Forms.Button();
+            this.tb_message = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // lb_processList
@@ -137,15 +139,33 @@
             this.btn_print.Name = "btn_print";
             this.btn_print.Size = new System.Drawing.Size(139, 44);
             this.btn_print.TabIndex = 11;
-            this.btn_print.Text = "Print table";
+            this.btn_print.Text = "Send Message to Selected Router";
             this.btn_print.UseVisualStyleBackColor = true;
             this.btn_print.Click += new System.EventHandler(this.btn_print_Click);
+            // 
+            // tb_message
+            // 
+            this.tb_message.Location = new System.Drawing.Point(12, 244);
+            this.tb_message.Name = "tb_message";
+            this.tb_message.Size = new System.Drawing.Size(100, 20);
+            this.tb_message.TabIndex = 12;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(13, 225);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(90, 13);
+            this.label2.TabIndex = 13;
+            this.label2.Text = "Message to Send";
             // 
             // starter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(372, 494);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.tb_message);
             this.Controls.Add(this.btn_print);
             this.Controls.Add(this.btn_terminateSingle);
             this.Controls.Add(this.tb_test);
@@ -178,6 +198,8 @@
         private System.Windows.Forms.TextBox tb_test;
         private System.Windows.Forms.Button btn_terminateSingle;
         private System.Windows.Forms.Button btn_print;
+        private System.Windows.Forms.TextBox tb_message;
+        private System.Windows.Forms.Label label2;
     }
 }
 
