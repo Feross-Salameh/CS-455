@@ -90,7 +90,8 @@ int readConfig(wstring foldername)
 int updateDistanceVectorTable(void) // returns 1 if need to send update messages to neighbors.
 {
 	// Generate "this" nodes distance vector table following new data from L-message or U-message.
-
+	// Generate string message to send out to neighbors
+	// sendUpdateMessage(updateMessage);
 	return 0;
 }
 
@@ -124,11 +125,7 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 		distanceData[routerName].routingTable[tokstr[i][0]] = stoi(tokstr[i + 1]);
 	}
 
-	if (updateDistanceVectorTable()) // Update distance vector table to see if a better route exists after new link cost update.
-	{
-		// Generate string updateMessage to send out to neighbors
-		// sendUpdateMessage(updateMessage);
-	}
+	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 }
 
 void sendUpdateMessage(char* message) // Will generate the update message to send out.
@@ -172,11 +169,7 @@ void linkCostChange(string message) // "User to Host" Link cost message looks li
 
 	table[tokstr[1].front()].distance = stoi(tokstr[2]); // update distance cost with new value from user.
 
-	if (updateDistanceVectorTable()) // Update distance vector table to see if a better route exists after new link cost update.
-	{
-		// Generate string message to send out to neighbors
-		// sendUpdateMessage(updateMessage);
-	}
+	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 }
 
 void printRoutingTable(string message) // "User to Host" Print message looks like: "P d" or "P" 
