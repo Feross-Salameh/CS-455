@@ -205,7 +205,7 @@ void sendUpdateMessage(char target, char* message) // Will generate the update m
 	int numBytes = send(table[target].sendSocket, message, strlen(message), 0);
 
 	if (numBytes == -1)
-		cout << "Error sending message to neighbor: " << x.first << ".\n You should do something about that.\n\n";
+		cout << "Error sending message to neighbor: " << target << ". You should do something about that.\n\n";
 }
 
 void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
