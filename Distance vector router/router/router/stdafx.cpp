@@ -109,6 +109,8 @@ void updateDistanceVectorTable(void)
 			else if (distanceDataIter.second + table[neighborTable.first].routingDistance == table[distanceDataIter.first].routingDistance)
 			{
 				shortestRouteTable[distanceDataIter.first] = TRUE; // Equivalent route is found. This may be the best link we can get.
+				table[distanceDataIter.first].routingDistance = distanceDataIter.second + table[neighborTable.first].routingDistance; // update cost
+				table[distanceDataIter.first].nextHop = neighborTable.first; // update new next hop.
 			}
 		}
 	}
