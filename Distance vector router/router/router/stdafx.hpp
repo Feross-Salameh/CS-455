@@ -72,12 +72,12 @@ void routerUpdate(string message, char routerName);
 /*
 	Handler for U-messages. "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 */
-void generateUMessage(char* message);
+void generateUMessage(char target, char* message);
 /*
 	Creates a message at pointer passed that meets U-message format based on this routers vector distance format.
 */
 
-void sendUpdateMessage(char* message);
+void sendUpdateMessage(char target, char* message);
 /*
 	This function will create a message to be sent of from the router's distance vector table.
 */

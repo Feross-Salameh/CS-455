@@ -138,16 +138,19 @@ void updateDistanceVectorTable(void)
 		if (shortestRouteTable[i->first] == FALSE) // If this "if"-check is true, that means the remaining table entry is a neighbor and it's distance increased. Set the routingDistance = new distance.
 			table[i->first].routingDistance = table[i->first].distance;
 
-	char updateMessage[253] = { 0 }; // 'U' + 63*4char groups of " dn costn" =  253
-	generateUMessage(updateMessage);
-	sendUpdateMessage(updateMessage);
+	// Generate and send new, appropriate U message to each router.
+	for (auto& i: table)
+	{
+		char updateMessage[256] = { 0 };
+		generateUMessage(i.first, updateMessage);
+		sendUpdateMessage(i.first, updateMessage);
+	}
 }
 
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 {
 	char* strptr = &message[0];
 	string tokstr[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
-	char router_name = '/0';
 
 	for (int i = 0; i < 127; i++) // Populate string array.
 	{
@@ -172,52 +175,37 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 }
 
-void generateUMessage(char* message)
+void generateUMessage(char target, char* message) // message is a char array of 256 chars
 {
 	message[0] = 'U';
 	string dest;
-	char c = 'A', *j;
+	int i = 1;
 
-	for (int i = 1; i < 253; i += 4)
+	for (auto& myTable : table)
 	{
-		while (table.count(c) == 0) // scans table for this index element until 'c' value is found. Stop when that routing index exists.
+		if (i > 256) // Error checking for insanity.
 		{
-			if (table.size() < c - 65) // 'A' == 65. If router A's table size is 5 (B,C,D,E, & F) and you hit c == 'G' == 71, c - 65 = 6, out of bounds.
-				break;
-			else
-				c++;
+			cout << "Something is wrong, your U message is huge. You should look into this.\n";
+			return;
 		}
-		if (c != -1) // end of table, blank out rest of message.
-		{
-			message[i] = ' ';
-			message[i + 1] = ' ';
-			message[i + 2] = ' ';
-			message[i + 3] = ' ';
-		}
-		else // not at end of table, keep populating message with pertinent information.
-		{
-			message[i] = ' ';
-			message[i + 1] = c;
-			message[i + 2] = ' ';
-			sprintf(&dest[0], "%d", table[c].distance);
-			strcpy(&message[i + 3], &dest[0]);
-		}
+		
+		if (poisonReverse && target == myTable.second.nextHop) // Poison Reverse
+			sprintf(&dest[0], " %c %d", myTable.first, INF);
+		else // Either Poison Reverse is disabled or it doesn't matter if it's enabled or not.
+			sprintf(&dest[0], " %c %d", myTable.first, myTable.second.distance);
+
+		i += dest.length();
+		strcpy(&message[i], &dest[0]);
+		dest.clear();
 	}
 }
 
-void sendUpdateMessage(char* message) // Will generate the update message to send out.
+void sendUpdateMessage(char target, char* message) // Will generate the update message to send out.
 {
-	// Loop through neighbors and send message.
-	for (auto& x : table)
-	{
-		if (x.second.nextHop == x.first) // nextHop == send-to router means it is a neighbor.
-		{
-			SSIZE_T numBytes = send(x.second.sendSocket, message, strlen(message), 0);
+	int numBytes = send(table[target].sendSocket, message, strlen(message), 0);
 
-			if (numBytes == -1)
-				cout << "Error sending message to neighbor: " << x.first << ".\n You should do something about that.\n\n";
-		}
-	}
+	if (numBytes == -1)
+		cout << "Error sending message to neighbor: " << x.first << ".\n You should do something about that.\n\n";
 }
 
 void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
