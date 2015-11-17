@@ -104,6 +104,7 @@ void updateDistanceVectorTable(void)
 				
 				table[distanceDataIter.first].routingDistance = distanceDataIter.second + table[neighborTable.first].routingDistance; // update cost
 				table[distanceDataIter.first].nextHop = neighborTable.first; // update new next hop.
+				cout << name << " - dest: " << distanceDataIter.first << " cost: " << table[distanceDataIter.first].routingDistance << " nexthop: " << neighborTable.first << endl;
 			}
 			else if (distanceDataIter.second + table[neighborTable.first].routingDistance == table[distanceDataIter.first].routingDistance)
 			{
