@@ -142,7 +142,7 @@ void updateDistanceVectorTable(void)
 			table[i->first].routingDistance = table[i->first].distance;
 
 	// Generate and send new, appropriate U message to each router.
-	for (auto& i: table)
+	for (auto& i: neighbors)
 	{
 		char updateMessage[256] = { 0 };
 		generateUMessage(i.first, updateMessage);
