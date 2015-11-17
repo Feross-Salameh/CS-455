@@ -161,15 +161,12 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 		}
 	}
 
-	neighbors[routerName].cost = 0; // Clear out old data to be repopulated.
-	neighbors[routerName].name = routerName;
-
 	for (int i = 1; i < 127; i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
 	{
 		if (tokstr[i].empty() == 1) // An empty token means you have no more data to consider.
 			return;
 
-		neighbors[routerName].cost = stoi(tokstr[i + 1]);
+		neighbors[routerName][tokstr[i][0]] = stoi(tokstr[i + 1]); // Update new cost from message.
 	}
 
 	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
