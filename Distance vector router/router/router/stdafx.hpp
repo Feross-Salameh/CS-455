@@ -24,6 +24,7 @@
 #include <locale>
 #include <codecvt>
 #include <ws2tcpip.h>
+#include <iterator>
 
 // definitions 
 #define INF 64 // used for calculating distances 
@@ -46,20 +47,6 @@ typedef struct myStruct
 	SOCKET sendSocket;
 
 }routingEntry; 
-
-typedef struct routersDistanceTable
-{
-	char name = 0; // Name of the "other" router.
-	map<char, distanceTableEntry> routingTable; // Table of distances and next-hops to another router (index element) from another router.
-}routersDistanceTable;
-
-typedef struct distanceTableEntry
-{
-	int cost; // This is obvious 
-	char nextHop; // This is for poisoned-reverse.
-}distanceTableEntry;
-
-//typedef struct thisRouterDistanceTableEntry;
 
 // functions prototypes
 

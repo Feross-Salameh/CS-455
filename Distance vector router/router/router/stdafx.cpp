@@ -11,7 +11,7 @@ fd_set masterWrite; // contains all sockets for writing
 fd_set read; // used when calling select
 fd_set write; // used when calling select
 map<char, routingEntry> table; // This will contain the distance vector routing table for "this" router.
-map<char, routersDistanceTable> distanceData; // All neighboring routers will have a table of distance data and be in this map.
+map<char, map<char, int>> neighbors; // All neighboring routers will have a table (map) of routable nodes and distance data.
 WSADATA wsaData;
 
 int readConfig(wstring foldername)
@@ -89,22 +89,54 @@ int readConfig(wstring foldername)
 
 void updateDistanceVectorTable(void)
 {
-	// Generate "this" nodes distance vector table after receiving new data from L-message or U-message.
-	for (auto& y : distanceData) // Increment through distanceData tables for shorter routes.
+	map <char, bool> shortestRouteTable; // Table of log detection shorter or same distance routes.
+	for (map<char, routingEntry>::iterator i = table.begin(); i == table.end(); i++) // Setup table and set to false
+		shortestRouteTable[i->first] = FALSE; // This fills the table with the same number of entries as table.size() and sets each to false.
+
+	// Find the shortest routes possible.
+	for (auto& neighborTable: neighbors)
 	{
-		if (table[y.first].distance != INF) // It's a neighbor. Update this routers table based on neighbors distanceData.
+		for (auto& distanceDataIter : neighborTable.second) 
 		{
-			for (auto& z : y.second.routingTable)
+			if (distanceDataIter.second + table[neighborTable.first].routingDistance < table[distanceDataIter.first].routingDistance) // This will create new nodes if discovered with routingDistances of INF upon creation.
 			{
-				if (table[z.first].routingDistance > z.second.cost + table[z.second.nextHop].distance)
-				{
-					table[z.first].routingDistance = z.second.cost + table[z.second.nextHop].distance;
-					table[z.first].nextHop = z.second.nextHop;
-				}
+				shortestRouteTable[distanceDataIter.first] = TRUE; // Faster route found!
+				
+				table[distanceDataIter.first].routingDistance = distanceDataIter.second + table[neighborTable.first].routingDistance; // update cost
+				table[distanceDataIter.first].nextHop = neighborTable.first; // update new next hop.
+			}
+			else if (distanceDataIter.second + table[neighborTable.first].routingDistance == table[distanceDataIter.first].routingDistance)
+			{
+				shortestRouteTable[distanceDataIter.first] = TRUE; // Equivalent route is found. This may be the best link we can get.
 			}
 		}
-		// else not a neighbor. You can't directly access this router's distanceData table make decisions on routing.
 	}
+
+	// Not all routes may have decreased or stayed the same. Some may have gone up since last update. We need to loop through and find the shortest route possible.
+	// First let's check if we have any routes that have increased in cost.
+	for (map<char, routingEntry>::iterator i = table.begin(); i == table.end(); i++) // Setup table and set to false
+		if (shortestRouteTable[i->first] == FALSE) // A cost has increased since last time.
+			table[i->first].routingDistance = INF;
+
+	//Now search for the shortest route distance available again.
+	for (auto& neighborTable : neighbors)
+	{
+		for (auto& distanceDataIter : neighborTable.second)
+		{
+			if (distanceDataIter.second + table[neighborTable.first].routingDistance < table[distanceDataIter.first].routingDistance) // This will create new nodes if discovered with routingDistances of INF upon creation.
+			{
+				shortestRouteTable[distanceDataIter.first] = TRUE; // Faster route found!
+
+				table[distanceDataIter.first].routingDistance = distanceDataIter.second + table[neighborTable.first].routingDistance; // update cost
+				table[distanceDataIter.first].nextHop = neighborTable.first; // update new next hop.
+			}
+		}
+	}
+
+	// Check to ensure all shortest distance are found again.
+	for (map<char, routingEntry>::iterator i = table.begin(); i == table.end(); i++) // Setup table and set to false
+		if (shortestRouteTable[i->first] == FALSE) // If this "if"-check is true, that means the remaining table entry is a neighbor and it's distance increased. Set the routingDistance = new distance.
+			table[i->first].routingDistance = table[i->first].distance;
 
 	char updateMessage[253] = { 0 }; // 'U' + 63*4char groups of " dn costn" =  253
 	generateUMessage(updateMessage);
@@ -129,16 +161,15 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 		}
 	}
 
-	//map<char, otherRoutersDistanceTable> distanceData;
-	distanceData[routerName].routingTable.clear(); // Clear out old data to be repopulated.
-	distanceData[routerName].name = routerName;
+	neighbors[routerName].cost = 0; // Clear out old data to be repopulated.
+	neighbors[routerName].name = routerName;
 
 	for (int i = 1; i < 127; i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
 	{
 		if (tokstr[i].empty() == 1) // An empty token means you have no more data to consider.
 			return;
 
-		distanceData[routerName].routingTable[tokstr[i][0]].cost = stoi(tokstr[i + 1]);
+		neighbors[routerName].cost = stoi(tokstr[i + 1]);
 	}
 
 	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
