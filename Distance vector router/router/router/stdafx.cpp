@@ -175,13 +175,14 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 void generateUMessage(char* message)
 {
 	message[0] = 'U';
+	string dest;
 	char c = 'A', *j;
 
 	for (int i = 1; i < 253; i += 4)
 	{
 		while (table.count(c) == 0) // scans table for this index element until 'c' value is found. Stop when that routing index exists.
 		{
-			if (table.size < c - 65) // 'A' == 65. If router A's table size is 5 (B,C,D,E, & F) and you hit c == 'G' == 71, c - 65 = 6, out of bounds.
+			if (table.size() < c - 65) // 'A' == 65. If router A's table size is 5 (B,C,D,E, & F) and you hit c == 'G' == 71, c - 65 = 6, out of bounds.
 				break;
 			else
 				c++;
@@ -198,7 +199,8 @@ void generateUMessage(char* message)
 			message[i] = ' ';
 			message[i + 1] = c;
 			message[i + 2] = ' ';
-			message[i + 3] = *itoa(table[c].distance, j, 10);
+			sprintf(&dest[0], "%d", table[c].distance);
+			strcpy(&message[i + 3], &dest[0]);
 		}
 	}
 }
