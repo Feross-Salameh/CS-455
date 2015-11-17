@@ -276,14 +276,13 @@ void printRoutingTable(string message) // "User to Host" Print message looks lik
 
 	// Option 1: print P d
 	if (tokstr[1].empty() == 0) // Two parameter passed in with message.
-		cout << tokstr[1].front() << ": " << table[tokstr[1].front()].distance << ' ' << table[tokstr[1].front()].nextHop << endl << endl;
+		cout << tokstr[1].front() << " - cost: " << table[tokstr[1].front()].distance << " nexthop: " << table[tokstr[1].front()].nextHop << endl;
 
 	// Option 2: print whole table
 	else // Only one parameter passed in with message, print the entire table.
 	{
 		for (auto& x : table)
-			cout << x.first << ":" << x.second.distance << " " << x.second.nextHop << endl;
-		cout << endl;
+			cout << x.first << " - cost: " << x.second.distance << " nexthop: " << x.second.nextHop << endl;
 	}
 }
 
