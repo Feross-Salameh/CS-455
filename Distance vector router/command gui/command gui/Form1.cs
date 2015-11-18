@@ -18,8 +18,23 @@ namespace command_gui
     {
         Dictionary<char, Process> routerDictionary = new Dictionary<char, Process>();
         string folder = "test1";
+        string routerPath;
+        string routerDirect;
         public starter()
         {
+            MessageBox.Show("Please select the router application\n(click OK).");
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "router exe|router.exe|EXE files|*.exe|All files (*.*)|*.*";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    routerPath = ofd.FileName;
+                    string[] file = routerPath.Split('\\');
+                    routerDirect = file[0];
+                    for (int i = 1; i < file.Length - 1; i++)
+                        routerDirect += "\\" + file[i];
+                }
+            }
             InitializeComponent();
         }
 
@@ -59,9 +74,8 @@ namespace command_gui
                 if (fileSplt.Last() == "cfg")
                 {
                     Process newProc = new Process();
-                    Directory.SetCurrentDirectory("..\\..\\router\\Debug\\");
-                    newProc.StartInfo.FileName = Directory.GetCurrentDirectory() + "\\router.exe";
-                    newProc.StartInfo.WorkingDirectory = "..\\..\\router\\Debug\\";
+                    newProc.StartInfo.FileName = routerPath;
+                    newProc.StartInfo.WorkingDirectory = routerDirect;
                     if (check)
                         newProc.StartInfo.Arguments = " -p";
                     newProc.StartInfo.Arguments += " " + tok[tok.Length - 2] + " ";
@@ -90,13 +104,9 @@ namespace command_gui
                 return;
             }
             Process newProc = new Process();
-            try
-            {
-                Directory.SetCurrentDirectory("..\\..\\..\\..\\router\\Debug\\");
-            }
-            catch { }
-            newProc.StartInfo.FileName = Directory.GetCurrentDirectory() + "\\router.exe";
-            newProc.StartInfo.WorkingDirectory = "..\\..\\router\\Debug\\";
+            Directory.SetCurrentDirectory(routerDirect);
+            newProc.StartInfo.FileName = routerPath;
+            newProc.StartInfo.WorkingDirectory = routerDirect;
             if (cb_poisedReverse.Checked)
                 newProc.StartInfo.Arguments = " -p";
             newProc.StartInfo.Arguments += " " + tb_test.Text.Trim() + " ";
@@ -176,7 +186,7 @@ namespace command_gui
             }
             IPAddress address = IPAddress.Parse("127.0.0.1");
             IPEndPoint endPoint = new IPEndPoint(address, port);
-            Socket printSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            Socket printSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             try
             {
                 printSocket.Connect(endPoint);

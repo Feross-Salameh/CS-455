@@ -155,34 +155,58 @@ void updateDistanceVectorTable(void)
 
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 {
-	char* strptr = &message[0];
-	char *context;
-	string tokstr[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
-	int i = 0;
-	strptr = strtok_s(&message[0], " ", &context);
-	tokstr[i] = strptr;
-
-	if (i == 0 && tokstr[i][0] != 'U') // Basic error checking, this should never be true.
+	message.erase(0, 1);
+	char * context;
+	bool tableChanged = false;
+	char *update = &message[0];
+	char *tok = strtok_s(update, " ", &context);
+	while(tok != NULL)
 	{
-		cout << "Something is wrong. The router update function was called.\nBut the message does not contain a router update message header." << endl;
-		return;
+		char rt = tok[0];
+		int dt = atoi(strtok_s(NULL, " ", &context));
+		int cost = table[rt].distance;
+		int newCost = table[routerName].distance + dt;
+		tok = strtok_s(NULL, " ", &context);
+		if (newCost < cost)
+		{
+			tableChanged = true;
+			table[rt].distance = newCost;
+			table[rt].nextHop = routerName;
+		}
 	}
-	for (i = 1; i < 127; i++) // Populate string array.
-	{
-		strptr = strtok_s(NULL, " ", &context);
-		tokstr[i] = strptr;
+	if (tableChanged)
+		sendRoutTableAll();
+	//char* strptr = &message[0];
+	//char *context;
+	//string tokstr[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
+	//int i = 0;
+	//strptr = strtok_s(&message[0], " ", &context);
+	//tokstr[i] = strptr;
 
-	}
+	//if (i == 0 && tokstr[i][0] != 'U') // Basic error checking, this should never be true.
+	//{
+	//	cout << "Something is wrong. The router update function was called.\nBut the message does not contain a router update message header." << endl;
+	//	return;
+	//}
 
-	for (int i = 1; i < 127; i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
-	{
-		if (tokstr[i].empty() == 1) // An empty token means you have no more data to consider.
-			return;
+	//strptr = strtok_s(NULL, " ", &context);
+	//while (strptr != NULL)
+	//{
+	//	tokstr[i++] = strptr;
+	//	strptr = strtok_s(NULL, " ", &context);
+	//}
 
-		neighbors[routerName][tokstr[i][0]] = stoi(tokstr[i + 1]); // Update new cost from message.
-	}
+ //
 
-	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
+	//for (int i = 1; i < strlen(tokstr.c_str()); i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
+	//{
+	//	if (tokstr[i].empty() == 1) // An empty token means you have no more data to consider.
+	//		return;
+
+	//	neighbors[routerName][tokstr[i][0]] = stoi(tokstr[i + 1]); // Update new cost from message.
+	//}
+
+	//updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 }
 
 void generateUMessage(char target) // message is a char array of 256 chars
@@ -436,13 +460,13 @@ int processSelect(int socs)
 					switch (recvBuf[0])
 					{
 					case 'P':
-						printRoutingTable(recvBuf);
+						//printRoutingTable(recvBuf);
 						break;
 					case 'U':
-						routerUpdate(recvBuf, iter->first);
+						routerUpdate((string)recvBuf, iter->first);
 						break;
 					case 'L':
-						linkCostChange(recvBuf);
+						//linkCostChange(recvBuf);
 						break;
 					}
 
