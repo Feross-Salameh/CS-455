@@ -158,17 +158,20 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 	char* strptr = &message[0];
 	char *context;
 	string tokstr[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
+	int i = 0;
+	strptr = strtok_s(&message[0], " ", &context);
+	tokstr[i] = strptr;
 
-	for (int i = 0; i < 127; i++) // Populate string array.
+	if (i == 0 && tokstr[i][0] != 'U') // Basic error checking, this should never be true.
 	{
-		strptr = strtok_s(&message[0], " ", &context);
+		cout << "Something is wrong. The router update function was called.\nBut the message does not contain a router update message header." << endl;
+		return;
+	}
+	for (i = 1; i < 127; i++) // Populate string array.
+	{
+		strptr = strtok_s(NULL, " ", &context);
 		tokstr[i] = strptr;
 
-		if (i == 0 && tokstr[i][0] != 'U') // Basic error checking, this should never be true.
-		{
-			cout << "Something is wrong. The router update function was called.\nBut the message does not contain a router update message header." << endl;
-			return;
-		}
 	}
 
 	for (int i = 1; i < 127; i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
