@@ -455,6 +455,7 @@ int processSelect(int socs)
 				int res;
 				ULONG NonBlock = 1;;
 				//incoming message....
+				memset(recvBuf, '\0', sizeof(recvBuf));
 				res = recv(entry.listenSocket, recvBuf, recvBufLen, 0);
 				if (res > 0)
 				{
