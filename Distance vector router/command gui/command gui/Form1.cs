@@ -116,8 +116,13 @@ namespace command_gui
                 MessageBox.Show("No routers to terminate.");
                 return;
             }
+
             foreach (KeyValuePair<char, Process> entry in routerDictionary)
-                entry.Value.Kill();
+                try
+                {
+                    entry.Value.Kill();
+                } catch { }
+                
             routerDictionary.Clear();
             lb_processList.DataSource = null;
         }
@@ -130,7 +135,10 @@ namespace command_gui
                 return;
             }
             KeyValuePair<char, Process> entry = (KeyValuePair<char, Process>)lb_processList.SelectedItem;
-            routerDictionary[entry.Key].Kill();
+            try
+            {
+                routerDictionary[entry.Key].Kill();
+            } catch { }
             routerDictionary.Remove(entry.Key);
             lb_processList.DataSource = new BindingSource(routerDictionary, null);
             lb_processList.DisplayMember = "Key";

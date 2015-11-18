@@ -13,6 +13,10 @@ fd_set write; // used when calling select
 map<char, routingEntry> table; // This will contain the distance vector routing table for "this" router.
 map<char, map<char, int>> neighbors; // All neighboring routers will have a table (map) of routable nodes and distance data.
 WSADATA wsaData;
+SOCKET baseSocket;
+char recvBuf[DEFAULT_BUFLEN];
+char sendBuf[DEFAULT_BUFLEN];
+int recvBufLen = DEFAULT_BUFLEN;
 
 int readConfig(wstring foldername)
 {
@@ -144,9 +148,8 @@ void updateDistanceVectorTable(void)
 	// Generate and send new, appropriate U message to each router.
 	for (auto& i: neighbors)
 	{
-		char updateMessage[256] = { 0 };
-		generateUMessage(i.first, updateMessage);
-		sendUpdateMessage(i.first, updateMessage);
+		generateUMessage(i.first);
+		sendUpdateMessage(i.first);
 	}
 }
 
@@ -178,34 +181,38 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 }
 
-void generateUMessage(char target, char* message) // message is a char array of 256 chars
+void generateUMessage(char target) // message is a char array of 256 chars
 {
-	message[0] = 'U';
-	string dest;
-	int i = 1;
+	
+	string dest = "U";
 
 	for (auto& myTable : table)
 	{
-		if (i > 256) // Error checking for insanity.
+		if (dest.length() > 256) // Error checking for insanity.
 		{
 			cout << "Something is wrong, your U message is huge. You should look into this.\n";
 			return;
 		}
 		
 		if (poisonReverse && target == myTable.second.nextHop) // Poison Reverse
-			sprintf(&dest[0], " %c %d", myTable.first, INF);
+		{
+			dest += " ";
+			dest += myTable.first;
+			dest += " ";
+			dest += to_string(INF);
+		}
 		else // Either Poison Reverse is disabled or it doesn't matter if it's enabled or not.
-			sprintf(&dest[0], " %c %d", myTable.first, myTable.second.distance);
-
-		i += dest.length();
-		strcpy(&message[i], &dest[0]);
-		dest.clear();
+		{
+			dest = dest + " " + myTable.first;
+			dest = dest + " " + to_string(myTable.second.distance);
+		}
 	}
+	strcpy_s(sendBuf, sizeof(sendBuf), dest.c_str());
 }
 
-void sendUpdateMessage(char target, char* message) // Will generate the update message to send out.
+void sendUpdateMessage(char target) // Will generate the update message to send out.
 {
-	int numBytes = send(table[target].sendSocket, message, strlen(message), 0);
+	int numBytes = send(table[target].sendSocket, sendBuf, strlen(sendBuf), 0);
 
 	if (numBytes == -1)
 		cout << "Error sending message to neighbor: " << target << ". You should do something about that.\n\n";
@@ -299,7 +306,33 @@ int setupSockets()
 		cout << "WSAStartup failed with error: " << iResult << endl;
 		return -1;
 	}
-	initLisSok(table[name].basePort, name);
+	//initLisSok(table[name].basePort, name);
+	//BASEPORT
+	u_long nonblock = 1;
+	struct addrinfo *result = NULL;
+	struct sockaddr_in addr;
+	string IP = "127.0.0.1";
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(table[name].basePort);
+	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
+		return -1;
+
+	baseSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (baseSocket == INVALID_SOCKET)
+		return -1;
+
+	iResult = ioctlsocket(baseSocket, FIONBIO, &nonblock);
+	if (iResult == SOCKET_ERROR)
+		return -1;
+
+	iResult = bind(baseSocket, (PSOCKADDR)&addr, sizeof(addr));
+	if (iResult == SOCKET_ERROR)
+		return -1;
+	listen(baseSocket, 5);
+	accept(baseSocket, NULL, NULL);
+	FD_SET(baseSocket, &masterWrite);
+
+	//END BASEPORT
 	for (auto iter = table.begin(); iter != table.end(); iter++)
 	{
 		routingEntry temp = iter->second;
@@ -311,6 +344,8 @@ int setupSockets()
 			readPort = temp.basePort + temp.portFrom;
 			if (initLisSok(writePort, iter->first) == -1)
 				cout << "failed to bind to port: " << writePort << endl;
+			else
+				cout << "Bound to port " << writePort << endl;
 			if (initConSok(readPort, iter->first) == -1)
 				cout << "failed to connect to port: " << readPort << endl; // this setup will need to be repeated until all sockets are connected. 
 		}	
@@ -332,20 +367,20 @@ int initLisSok(int port, char router)
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
 		return -1;
 
-	table[router].sendSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (table[router].sendSocket == INVALID_SOCKET)
+	table[router].listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (table[router].listenSocket == INVALID_SOCKET)
 		return -1;
 
-	iResult = ioctlsocket(table[router].sendSocket, FIONBIO, &nonblock);
+	iResult = ioctlsocket(table[router].listenSocket, FIONBIO, &nonblock);
 	if (iResult == SOCKET_ERROR)
 		return -1;
 
-	iResult = bind(table[router].sendSocket, (PSOCKADDR)&addr, sizeof(addr));
+	iResult = bind(table[router].listenSocket, (PSOCKADDR)&addr, sizeof(addr));
 	if (iResult == SOCKET_ERROR)
 		return -1;
-	
-	listen(table[router].sendSocket, 5);
-	FD_SET(table[router].sendSocket, &masterWrite);
+	listen(table[router].listenSocket, 5);
+	//accept(table[router].listenSocket, NULL, NULL);
+	FD_SET(table[router].listenSocket, &masterRead);
 
 	return 1;
 }
@@ -362,19 +397,111 @@ int initConSok(int port, char router)
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
 		return -1;
 
-	table[router].listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (table[router].listenSocket == INVALID_SOCKET)
+	table[router].sendSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (table[router].sendSocket == INVALID_SOCKET)
 		return -1;
 
-	iResult = ioctlsocket(table[router].listenSocket, FIONBIO, &nonblock);
+	iResult = ioctlsocket(table[router].sendSocket, FIONBIO, &nonblock);
 	if (iResult == SOCKET_ERROR)
 		return -1;
 
-	iResult = connect(table[router].listenSocket, (PSOCKADDR)&addr, sizeof(addr));
-	FD_SET(table[router].listenSocket, &masterRead);
-	if (iResult == SOCKET_ERROR)
-		return -1;
-	
+	iResult = connect(table[router].sendSocket, (PSOCKADDR)&addr, sizeof(addr));
+	//if (iResult == SOCKET_ERROR)
+		//return -1;
+	FD_SET(table[router].sendSocket, &masterWrite);
 	return 1;
 }
 
+
+int processSelect(int socs)
+{
+	for (int i = 0; i < socs; i++)
+	{
+		for (auto iter = table.begin(); iter != table.end(); iter++)
+		{
+			routingEntry entry = iter->second;
+			if (FD_ISSET(entry.listenSocket, &read) != 0)
+			{
+				int res;
+				ULONG NonBlock = 1;;
+				//incoming message....
+				res = recv(entry.listenSocket, recvBuf, recvBufLen, 0);
+				SOCKET accp = accept(entry.listenSocket, NULL, NULL);
+				if (accp == INVALID_SOCKET)
+				{
+					if (WSAGetLastError() != WSAEWOULDBLOCK) 
+					{
+						cout << "accept failed with this error: " << WSAGetLastError() << endl;
+						break;
+					}
+					
+				}
+				else
+				{
+					ioctlsocket(accp, FIONBIO, &NonBlock);
+					res = recv(accp, recvBuf, recvBufLen, 0);
+					if (res < 0)
+					{
+						int error = WSAGetLastError();
+						error = error;
+					}
+					else
+					{
+						cout << "recieved: " << recvBuf << endl;
+						entry.listenSocket = accp;
+					}
+				}
+
+			}
+			else if (FD_ISSET(entry.sendSocket, &write) != 0)
+			{
+				 /*connected to new socket should send routing table....*/
+				generateUMessage(iter->first);
+				//cout << "sending table to " << iter->first << endl;
+				int numBytes = send(entry.sendSocket, sendBuf, strlen(sendBuf), 0);
+				if (numBytes == -1)
+					cout << "Error sending message to neighbor: "<< WSAGetLastError() << endl;
+				//Sleep(1000);
+			}
+		}
+	}
+
+	return 1;
+}
+
+void resetFD()
+{
+	FD_ZERO(&masterRead);
+	FD_ZERO(&masterWrite);
+	FD_ZERO(&read);
+	FD_ZERO(&write);
+	FD_SET(baseSocket, &masterWrite);
+	for (auto iter = table.begin(); iter != table.end(); iter++)
+	{
+		routingEntry entry = iter->second;
+		if (entry.portTo > 0)
+		{
+			FD_SET(entry.listenSocket, &masterRead);
+			FD_SET(entry.sendSocket, &masterWrite);
+		}
+	}
+
+}
+
+
+void sendRoutTableAll()
+{
+	for (auto iter = table.begin(); iter != table.end(); iter++)
+	{
+		generateUMessage(iter->first);
+		if (iter->second.sendSocket != 0)
+		{
+			int result = send(iter->second.sendSocket, sendBuf, strlen(sendBuf), 0);
+			if (result < 0)
+			{
+				cout << "Error while trying to send updated table to router " << iter->first <<" : " << WSAGetLastError() << endl;
+			}
+		}
+
+	}
+}

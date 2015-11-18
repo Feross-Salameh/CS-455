@@ -29,7 +29,7 @@
 // definitions 
 #define INF 64 // used for calculating distances 
 #define BUFSIZE MAX_PATH // needed for changing directories. 
-
+#define DEFAULT_BUFLEN 512
 // namespace
 using namespace std;
 
@@ -43,8 +43,8 @@ typedef struct myStruct
 	int portTo = -1; // first number after cost
 	int portFrom = -1; // second number after cost
 	int basePort = -1; 
-	SOCKET listenSocket;
-	SOCKET sendSocket;
+	SOCKET listenSocket = 0;
+	SOCKET sendSocket = 0;
 
 }routingEntry; 
 
@@ -59,37 +59,38 @@ typedef struct myStruct
 int readConfig(wstring foldername);
 
 /*
-	setup and configure all of the sokcets required. This will store all of the sockets to the fd_set master.
-	Will return 1 if creating of all sockets successful. Otherwise return -1;
-*/
-
-void updateDistanceVectorTable(void);// returns 1 if need to send update messages to neighbors.
-/*
 	Handler for the distance vector table algorithm. This is called after 'L' or 'U' messages.
 */
+void updateDistanceVectorTable(void);// returns 1 if need to send update messages to neighbors.
 
-void routerUpdate(string message, char routerName); 
 /*
 	Handler for U-messages. "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 */
-void generateUMessage(char target, char* message);
+void routerUpdate(string message, char routerName); 
+
 /*
 	Creates a message at pointer passed that meets U-message format based on this routers vector distance format.
 */
+void generateUMessage(char target);
 
-void sendUpdateMessage(char target, char* message);
 /*
 	This function will create a message to be sent of from the router's distance vector table.
 */
+void sendUpdateMessage(char target);
 
-void linkCostChange(string message);
 /*
 	Handler for L-messages. "User to Host" Link cost message looks like: "L n cost"
 */
+void linkCostChange(string message);
 
-void printRoutingTable(string message);
 /*
 	Handler for P-messages. "User to Host" Print message looks like: "P d" or "P" 
+*/
+void printRoutingTable(string message);
+
+/*
+setup and configure all of the sokcets required. This will store all of the sockets to the fd_set master.
+Will return 1 if creating of all sockets successful. Otherwise return -1;
 */
 
 int setupSockets();
@@ -106,4 +107,20 @@ int initLisSok(int port, char router);
 */
 int initConSok(int port, char router);
 
+
+/*
+	This function will deal with the ready sockets that have returned from select. Will return 0 if 
+	anything went wrong in the process.
+*/
+int processSelect(int socs);
+
+/*
+	Resets the FD_sets, this will make sure select timeout is called correctly
+*/
+void resetFD();
+
+/*
+	resends it's routing table to all 
+*/
+void sendRoutTableAll();
 #endif // ROUTER_HPP
