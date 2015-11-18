@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		timeval timeout = timeval();
 		timeout.tv_sec = 3;
 		//cout << "calling select..." << endl;
-		int ret = select(0, NULL, &write, NULL, &timeout);
+		int ret = select(0, &read, NULL,  NULL, &timeout);
 		if (ret < 0)
 			cout << "error on select call: " << WSAGetLastError() << endl;
 		if (ret == 0)

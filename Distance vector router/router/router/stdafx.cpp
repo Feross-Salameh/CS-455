@@ -156,11 +156,12 @@ void updateDistanceVectorTable(void)
 void routerUpdate(string message, char routerName) // "Host to Host" Router update message looks like: "U d1 cost1 d2 cost2 … dn costn"
 {
 	char* strptr = &message[0];
+	char *context;
 	string tokstr[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
 
 	for (int i = 0; i < 127; i++) // Populate string array.
 	{
-		strptr = strtok_s(&message[0], " ", NULL);
+		strptr = strtok_s(&message[0], " ", &context);
 		tokstr[i] = strptr;
 
 		if (i == 0 && tokstr[i][0] != 'U') // Basic error checking, this should never be true.
@@ -317,7 +318,7 @@ int setupSockets()
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
 		return -1;
 
-	baseSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	baseSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (baseSocket == INVALID_SOCKET)
 		return -1;
 
@@ -367,7 +368,7 @@ int initLisSok(int port, char router)
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
 		return -1;
 
-	table[router].listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	table[router].listenSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (table[router].listenSocket == INVALID_SOCKET)
 		return -1;
 
@@ -397,7 +398,7 @@ int initConSok(int port, char router)
 	if (inet_pton(AF_INET, IP.c_str(), &addr.sin_addr) != 1)
 		return -1;
 
-	table[router].sendSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	table[router].sendSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (table[router].sendSocket == INVALID_SOCKET)
 		return -1;
 
@@ -426,30 +427,26 @@ int processSelect(int socs)
 				ULONG NonBlock = 1;;
 				//incoming message....
 				res = recv(entry.listenSocket, recvBuf, recvBufLen, 0);
-				SOCKET accp = accept(entry.listenSocket, NULL, NULL);
-				if (accp == INVALID_SOCKET)
+				if (res > 0)
 				{
-					if (WSAGetLastError() != WSAEWOULDBLOCK) 
+					cout << "recieved: " << recvBuf << endl;
+					switch (recvBuf[0])
 					{
-						cout << "accept failed with this error: " << WSAGetLastError() << endl;
+					case 'P':
+						printRoutingTable(recvBuf);
+						break;
+					case 'U':
+						routerUpdate(recvBuf, iter->first);
+						break;
+					case 'L':
+						linkCostChange(recvBuf);
 						break;
 					}
-					
+
 				}
-				else
+				else if(WSAGetLastError() != WSAEWOULDBLOCK)
 				{
-					ioctlsocket(accp, FIONBIO, &NonBlock);
-					res = recv(accp, recvBuf, recvBufLen, 0);
-					if (res < 0)
-					{
-						int error = WSAGetLastError();
-						error = error;
-					}
-					else
-					{
-						cout << "recieved: " << recvBuf << endl;
-						entry.listenSocket = accp;
-					}
+					cout << "error on recv(): " << WSAGetLastError() << endl;
 				}
 
 			}
@@ -461,7 +458,7 @@ int processSelect(int socs)
 				int numBytes = send(entry.sendSocket, sendBuf, strlen(sendBuf), 0);
 				if (numBytes == -1)
 					cout << "Error sending message to neighbor: "<< WSAGetLastError() << endl;
-				//Sleep(1000);
+				Sleep(1000);
 			}
 		}
 	}
