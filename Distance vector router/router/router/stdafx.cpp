@@ -23,6 +23,8 @@ int readConfig(wstring foldername)
 	wstring dir = L"..\\..\\proj2-skeleton\\";
 	dir += foldername;
 
+	cout << "Opening directory: ";
+	wcout << dir << endl;
 	if (!SetCurrentDirectory((LPCWSTR)dir.c_str()))
 	{
 		MessageBox(NULL, (LPCWSTR)L"Unable to open directory", (LPCWSTR)name, MB_OK);

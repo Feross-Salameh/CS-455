@@ -191,7 +191,14 @@ namespace command_gui
             {
                 printSocket.Connect(endPoint);
                 Byte[] printRequest = Encoding.ASCII.GetBytes(tb_message.Text.Trim());
-                printSocket.Send(printRequest);
+                MessageBox.Show(string.Format("Attempting to send...\nMessage: {0}\nOn port: {1}", tb_message.Text, port));
+                int j = printSocket.Send(printRequest);
+
+                if (j >= 1)
+                    MessageBox.Show(string.Format("Successful sent {0} of bytes.", j));
+                else
+                    MessageBox.Show(string.Format("Failed sending any number of bytes. socket.send() returned {0}", j));
+
                 printSocket.Shutdown(SocketShutdown.Both);
                 printSocket.Close();
             }

@@ -32,7 +32,11 @@ int main(int argc, char *argv[])
 		cout << "started router " << name << endl;
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		wstring testFolder = converter.from_bytes(argv[1]);
-		readConfig(testFolder);
+		if (readConfig(testFolder) == -1)
+		{
+			cout << "Error in startup. Terminating program." << endl;
+			return 0;
+		}
 		cout << "Reading config files successful" << endl;
 	}
 	setupSockets();
