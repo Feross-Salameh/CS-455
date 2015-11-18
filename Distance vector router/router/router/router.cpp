@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 		memcpy(&write, &masterWrite, sizeof(masterWrite));
 		memcpy(&read, &masterRead, sizeof(masterRead));
 		timeval timeout = timeval();
-		timeout.tv_sec = 3;
+		timeout.tv_sec = 10;
 		//cout << "calling select..." << endl;
 		int ret = select(0, &read, NULL,  NULL, &timeout);
 		if (ret < 0)

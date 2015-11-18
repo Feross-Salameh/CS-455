@@ -480,16 +480,16 @@ int processSelect(int socs)
 				}
 
 			}
-			else if (FD_ISSET(entry.sendSocket, &write) != 0)
-			{
-				 /*connected to new socket should send routing table....*/
-				generateUMessage(iter->first);
-				//cout << "sending table to " << iter->first << endl;
-				int numBytes = send(entry.sendSocket, sendBuf, strlen(sendBuf), 0);
-				if (numBytes == -1)
-					cout << "Error sending message to neighbor: "<< WSAGetLastError() << endl;
-				Sleep(1000);
-			}
+			//else if (FD_ISSET(entry.sendSocket, &write) != 0)
+			//{
+			//	 /*connected to new socket should send routing table....*/
+			//	generateUMessage(iter->first);
+			//	//cout << "sending table to " << iter->first << endl;
+			//	int numBytes = send(entry.sendSocket, sendBuf, strlen(sendBuf), 0);
+			//	if (numBytes == -1)
+			//		cout << "Error sending message to neighbor: "<< WSAGetLastError() << endl;
+			//	Sleep(1000);
+			//}
 		}
 	}
 
