@@ -375,7 +375,7 @@ int setupSockets()
 			else
 				cout << "Bound to port " << writePort << endl;
 			if (initConSok(readPort, iter->first) == -1)
-				cout << "failed to connect to port: " << readPort << endl; // this setup will need to be repeated until all sockets are connected. 
+				cout << "failed to connect to port: " << readPort << " error: "<< WSAGetLastError() << endl; // this setup will need to be repeated until all sockets are connected. 
 		}	
 
 	}
