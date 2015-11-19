@@ -359,9 +359,9 @@ int setupSockets()
 	if (iResult == SOCKET_ERROR)
 		return -1;
 	listen(baseSocket, 5);
-	accept(baseSocket, NULL, NULL);
-	FD_SET(baseSocket, &masterWrite);
-
+	//accept(baseSocket, NULL, NULL);
+	FD_SET(baseSocket, &masterRead);
+	cout << "Bound to port " << table[name].basePort << endl;
 	//END BASEPORT
 	for (auto iter = table.begin(); iter != table.end(); iter++)
 	{
@@ -447,13 +447,35 @@ int processSelect(int socs)
 {
 	for (int i = 0; i < socs; i++)
 	{
+		if (FD_ISSET(baseSocket, &read))
+		{
+			int res;
+			//incoming message....
+			memset(recvBuf, '\0', sizeof(recvBuf));
+			res = recv(baseSocket, recvBuf, recvBufLen, 0);
+			if (res > 0)
+			{
+				cout << "recieved: " << recvBuf << endl;
+				switch (recvBuf[0])
+				{
+				case 'P':
+					//printRoutingTable(recvBuf);
+					break;
+				case 'L':
+					//linkCostChange(recvBuf);
+					break;
+				default:
+					cout << "Unkown command recieved on base." << endl;
+				}
+
+			}
+		}
 		for (auto iter = table.begin(); iter != table.end(); iter++)
 		{
 			routingEntry entry = iter->second;
 			if (FD_ISSET(entry.listenSocket, &read) != 0)
 			{
 				int res;
-				ULONG NonBlock = 1;;
 				//incoming message....
 				memset(recvBuf, '\0', sizeof(recvBuf));
 				res = recv(entry.listenSocket, recvBuf, recvBufLen, 0);
@@ -478,7 +500,6 @@ int processSelect(int socs)
 				{
 					cout << "error on recv(): " << WSAGetLastError() << endl;
 				}
-
 			}
 			//else if (FD_ISSET(entry.sendSocket, &write) != 0)
 			//{
@@ -502,7 +523,7 @@ void resetFD()
 	FD_ZERO(&masterWrite);
 	FD_ZERO(&read);
 	FD_ZERO(&write);
-	FD_SET(baseSocket, &masterWrite);
+	FD_SET(baseSocket, &masterRead);
 	for (auto iter = table.begin(); iter != table.end(); iter++)
 	{
 		routingEntry entry = iter->second;
