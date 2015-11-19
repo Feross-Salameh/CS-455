@@ -178,37 +178,6 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 	}
 	if (tableChanged)
 		sendRoutTableAll();
-	//char* strptr = &message[0];
-	//char *context;
-	//string tokstr[127]; // Assume an upper limit of 63 routers, 63 distance costs, and the letter U = 127 strings max
-	//int i = 0;
-	//strptr = strtok_s(&message[0], " ", &context);
-	//tokstr[i] = strptr;
-
-	//if (i == 0 && tokstr[i][0] != 'U') // Basic error checking, this should never be true.
-	//{
-	//	cout << "Something is wrong. The router update function was called.\nBut the message does not contain a router update message header." << endl;
-	//	return;
-	//}
-
-	//strptr = strtok_s(NULL, " ", &context);
-	//while (strptr != NULL)
-	//{
-	//	tokstr[i++] = strptr;
-	//	strptr = strtok_s(NULL, " ", &context);
-	//}
-
- //
-
-	//for (int i = 1; i < strlen(tokstr.c_str()); i += 2) // Ignore the first tokenized string which is "U", increment through the pairs of tokenized strings.
-	//{
-	//	if (tokstr[i].empty() == 1) // An empty token means you have no more data to consider.
-	//		return;
-
-	//	neighbors[routerName][tokstr[i][0]] = stoi(tokstr[i + 1]); // Update new cost from message.
-	//}
-
-	//updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
 }
 
 void generateUMessage(char target) // message is a char array of 256 chars
@@ -248,79 +217,87 @@ void sendUpdateMessage(char target) // Will generate the update message to send 
 		cout << "Error sending message to neighbor: " << target << ". You should do something about that.\n\n";
 }
 
-void linkCostChange(string message) // "User to Host" Link cost message looks like: "L n cost"
+void linkCostChange() // "User to Host" Link cost message looks like: "L n cost"
 {
-	char* strptr = &message[0];
-	char *context = NULL;
-	string tokstr[3];
+	char* strptr;
+	char tokstr[3][5];
 
-	for (int i = 0; i < 3; i++) // Populate string array.
+	strptr = strtok(recvBuf, " ");
+	cout << 0 << ": strptr = " << *strptr << endl;
+	strcpy(tokstr[0], strptr);
+	cout << 0 << ": tokstr[" << 0 << "]= " << tokstr[0] << endl;
+
+	if (tokstr[0][0] != 'L') // Basic error checking, this should never be true.
 	{
-		strptr = strtok_s(&message[0], " ", &context);
-		tokstr[i] = strptr;
+		cout << "Something is wrong. The link cost change function was called.\nBut the message does not contain a link cost change message header." << endl;
+		return;
+	}
 
-		if (i == 0 && tokstr[i][0] != 'L') // Basic error checking, this should never be true.
-		{
-			cout << "Something is wrong. The link cost change function was called.\nBut the message does not contain a link cost change message header." << endl;
-			return;
-		}
+	for (int i = 1; i < 3; i++) // Populate string array.
+	{
+		strptr = strtok(NULL, " ");
+		cout << i << ": strptr = " << *strptr << endl;
+		strcpy(tokstr[i], strptr);
+		cout << i << ": tokstr[" << i << "]= " << tokstr[i] << endl;
+
 		if (i == 1 && name == tokstr[i][0])
 		{
 			cout << "Invalid Link message content. You are attempting to create an entry for this router in it's own table. " << endl;
 			return;
 		}
-
-		if ((i == 1 || i == 2) && tokstr[i].empty() == 1) // Basic error checking, this should never be true.
+		if ((i == 1 || i == 2) && tokstr[i][0] == 0) // Basic error checking, this should never be true.
 		{
 			cout << "Something is wrong. The link cost change function was called.\nBut the message is not a complete link cost change message." << endl;
 			return;
 		}
 	}
+	memset(recvBuf, '\0', sizeof(recvBuf));
 
-	table[tokstr[1].front()].distance = stoi(tokstr[2]); // update distance cost with new value from user.
-
-	updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
+	if (table[tokstr[1][0]].distance == INF)
+	{
+		cout << "The node to change a link with is not a neighbor, updating the routing distance with the new value." << endl;
+		cout << "You may not have intended to do this." << endl;
+		table[tokstr[1][0]].distance = stoi(tokstr[2]); // update distance cost with new value from user.
+	}
+	else
+	{
+		cout << "The node to change a link with is a neighbor, updating the adjacent distance with the new value." << endl;
+		updateDistanceVectorTable(); // Update distance vector table to see if a better route exists after new link cost update.
+	}
 }
 
-void printRoutingTable(string message) // "User to Host" Print message looks like: "P d" or "P" 
+	
+
+void printRoutingTable() // "User to Host" Print message looks like: "P d" or "P" 
 {
-	char* strptr = &message[0];
-	char *context = NULL;
-	string tokstr[2];
-	for (int i = 0; i < 3; i++) // Populate string array.
-	{
-		strptr = strtok_s(&message[0], " ", &context);
-		tokstr[i] = strptr;
+	char* strptr;
+	char tokstr[2][5] = { 0 };
 
-		if (i == 0 && tokstr[i][0] != 'P') // Basic error checking, this should never be true.
-		{
-			cout << "Something is wrong. The print routing table function was called.\nBut the message does not contain a print table message header." << endl;
-			return;
-		}
+	// Populate string array.
+	strptr = strtok(recvBuf, " ");
+	strcpy(tokstr[0],strptr);
+	strptr = strtok(NULL, " ");
+	if (strptr != 0)
+		strcpy(tokstr[1], strptr);
 
-		if (i == 1 && tokstr[i].empty() == 1) // Basic error checking, this should never be true.
-		{
-			cout << "Something is wrong. The print routing table function was called.\nBut the message is not a complete print table message." << endl;
-			return;
-		}
-	}
+	// recvBuf has been modified by strtok. Erase it for GP.
+	memset(recvBuf, '\0', sizeof(recvBuf));
 
-	if (table.find(tokstr[1][0]) == table.end()) // The table entry to print does not exist.
+	if (table.find(tokstr[1][0]) == table.end() && tokstr[1][0] != 0) // The table entry to print does not exist.
 	{
 		cout << "The entry you desire to have printed does not exist in the table." << endl;
 		return;
 	}
 
 	// Option 1: print P d
-	if (tokstr[1].empty() == 0) // Two parameter passed in with message.
-		cout << tokstr[1].front() << " - cost: " << table[tokstr[1].front()].distance << " nexthop: " << table[tokstr[1].front()].nextHop << endl;
+	if (tokstr[1][0] != 0) // Two parameter passed in with message.
+		cout << tokstr[1][0] << " - cost: " << table[tokstr[1][0]].distance << " nexthop: " << table[tokstr[1][0]].nextHop << endl;
 
 	// Option 2: print whole table
 	else // Only one parameter passed in with message, print the entire table.
-	{
 		for (auto& x : table)
 			cout << x.first << " - cost: " << x.second.distance << " nexthop: " << x.second.nextHop << endl;
-	}
+
 }
 
 int setupSockets()
@@ -459,10 +436,10 @@ int processSelect(int socs)
 				switch (recvBuf[0])
 				{
 				case 'P':
-					//printRoutingTable(recvBuf);
+					printRoutingTable();
 					break;
 				case 'L':
-					//linkCostChange(recvBuf);
+					linkCostChange();
 					break;
 				default:
 					cout << "Unkown command recieved on base." << endl;
@@ -481,17 +458,17 @@ int processSelect(int socs)
 				res = recv(entry.listenSocket, recvBuf, recvBufLen, 0);
 				if (res > 0)
 				{
-					cout << "recieved: " << recvBuf << endl;
+					cout << "received: " << recvBuf << endl;
 					switch (recvBuf[0])
 					{
 					case 'P':
-						//printRoutingTable(recvBuf);
+						//printRoutingTable();
 						break;
 					case 'U':
 						routerUpdate((string)recvBuf, iter->first);
 						break;
 					case 'L':
-						//linkCostChange(recvBuf);
+						//linkCostChange();
 						break;
 					}
 

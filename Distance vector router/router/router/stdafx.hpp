@@ -81,12 +81,12 @@ void sendUpdateMessage(char target);
 /*
 	Handler for L-messages. "User to Host" Link cost message looks like: "L n cost"
 */
-void linkCostChange(string message);
+void linkCostChange();
 
 /*
 	Handler for P-messages. "User to Host" Print message looks like: "P d" or "P" 
 */
-void printRoutingTable(string message);
+void printRoutingTable();
 
 /*
 setup and configure all of the sokcets required. This will store all of the sockets to the fd_set master.
