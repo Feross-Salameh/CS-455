@@ -177,7 +177,12 @@ void routerUpdate(string message, char routerName) // "Host to Host" Router upda
 		}
 	}
 	if (tableChanged)
+	{
+		writeToLog("New table");
+		tableToLog();
 		sendRoutTableAll();
+	}
+
 }
 
 void generateUMessage(char target) // message is a char array of 256 chars
@@ -221,10 +226,10 @@ void linkCostChange() // "User to Host" Link cost message looks like: "L n cost"
 {
 	char* strptr;
 	char tokstr[3][5];
-
-	strptr = strtok(recvBuf, " ");
+	char * context;
+	strptr = strtok_s(recvBuf, " ", &context);
 	cout << 0 << ": strptr = " << *strptr << endl;
-	strcpy(tokstr[0], strptr);
+	strcpy_s(tokstr[0],sizeof(tokstr[0]), strptr);
 	cout << 0 << ": tokstr[" << 0 << "]= " << tokstr[0] << endl;
 
 	if (tokstr[0][0] != 'L') // Basic error checking, this should never be true.
@@ -235,9 +240,9 @@ void linkCostChange() // "User to Host" Link cost message looks like: "L n cost"
 
 	for (int i = 1; i < 3; i++) // Populate string array.
 	{
-		strptr = strtok(NULL, " ");
+		strptr = strtok_s(NULL, " ", &context);
 		cout << i << ": strptr = " << *strptr << endl;
-		strcpy(tokstr[i], strptr);
+		strcpy_s(tokstr[i], sizeof(tokstr[1]), strptr);
 		cout << i << ": tokstr[" << i << "]= " << tokstr[i] << endl;
 
 		if (i == 1 && name == tokstr[i][0])
@@ -266,19 +271,17 @@ void linkCostChange() // "User to Host" Link cost message looks like: "L n cost"
 	}
 }
 
-	
-
 void printRoutingTable() // "User to Host" Print message looks like: "P d" or "P" 
 {
 	char* strptr;
 	char tokstr[2][5] = { 0 };
-
+	char * context;
 	// Populate string array.
-	strptr = strtok(recvBuf, " ");
-	strcpy(tokstr[0],strptr);
-	strptr = strtok(NULL, " ");
+	strptr = strtok_s(recvBuf, " ", &context);
+	strcpy_s(tokstr[0],sizeof(tokstr[0]),strptr);
+	strptr = strtok_s(NULL, " ", &context);
 	if (strptr != 0)
-		strcpy(tokstr[1], strptr);
+		strcpy_s(tokstr[1], sizeof(tokstr[1]), strptr);
 
 	// recvBuf has been modified by strtok. Erase it for GP.
 	memset(recvBuf, '\0', sizeof(recvBuf));
@@ -419,7 +422,6 @@ int initConSok(int port, char router)
 	return 1;
 }
 
-
 int processSelect(int socs)
 {
 	for (int i = 0; i < socs; i++)
@@ -513,7 +515,6 @@ void resetFD()
 
 }
 
-
 void sendRoutTableAll()
 {
 	for (auto iter = table.begin(); iter != table.end(); iter++)
@@ -529,4 +530,57 @@ void sendRoutTableAll()
 		}
 
 	}
+}
+
+int writeToLog(string msg)
+{
+	ofstream file;
+	while (1)
+	{
+		try
+		{
+			struct tm newtime;
+			char am_pm[] = "AM";
+			__time64_t long_time;
+			char timebuf[26];
+			errno_t err;
+
+			// Get time as 64-bit integer.
+			_time64(&long_time);
+			// Convert to local time.
+			err = _localtime64_s(&newtime, &long_time);
+			err = asctime_s(timebuf, 26, &newtime);
+			string outputfile;
+			outputfile = name;
+			outputfile += "-output.txt";
+			file.open(outputfile.c_str() , ios::app);
+			if (!file.is_open())
+				throw exception();
+			timebuf[strlen(timebuf) - 1] = '\0';
+			file << timebuf << ": " << msg << endl;
+			file.close();
+			return 1;
+		}
+		catch(exception) {Sleep(100); }
+	}
+
+	return 0;
+}
+
+void tableToLog()
+{
+	writeToLog("Router	Cost	Nexthop");
+	writeToLog("----------------------------");
+	for (auto iter = table.begin(); iter != table.end(); iter++)
+	{
+		routingEntry entry = iter->second;
+		string line;
+		line = iter->first;
+		line += "		";
+		line += to_string(entry.distance);
+		line += "	";
+		line += entry.nextHop;
+		writeToLog(line);
+	}
+	writeToLog("----------------------------");
 }

@@ -35,11 +35,17 @@ int main(int argc, char *argv[])
 		if (readConfig(testFolder) == -1)
 		{
 			cout << "Error in startup. Terminating program." << endl;
+			writeToLog("Error in startup. Terminating program.");
 			return 0;
 		}
 		cout << "Reading config files successful" << endl;
+		
 	}
+	writeToLog("\n\nStarting New instance of this Router:\n");
+	writeToLog("Reading config files successful");
 	setupSockets();
+	writeToLog("Printing starting table: ");
+	tableToLog();
 	while (1) // connect to sockets....
 	{
 		
@@ -62,4 +68,6 @@ int main(int argc, char *argv[])
 	cin >> inp;
     return 0;
 }
+
+
 

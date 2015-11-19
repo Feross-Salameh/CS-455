@@ -25,6 +25,7 @@
 #include <codecvt>
 #include <ws2tcpip.h>
 #include <iterator>
+#include <ctime>
 
 // definitions 
 #define INF 64 // used for calculating distances 
@@ -123,4 +124,15 @@ void resetFD();
 	resends it's routing table to all 
 */
 void sendRoutTableAll();
+
+/*
+	Writes the messge to "output.txt" in CWD, Also time stamp and give the name of the router. 
+*/
+int writeToLog(string msg);
+
+
+/*
+	outputs the routing table to the "output.txt" folder in a graphical way.
+*/
+void tableToLog();
 #endif // ROUTER_HPP
