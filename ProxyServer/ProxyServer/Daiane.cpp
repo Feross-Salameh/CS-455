@@ -16,9 +16,9 @@ void log() {
 	//The file to be writing
 	
 
-	file_log_proxy_ptr = fopen("proxylogging.log", "a");
-	file_log_proxy_ptr = fopen("proxylogging.log", "w");
-
+	//file_log_proxy_ptr = fopen("proxylogging.log", "a");
+	//file_log_proxy_ptr = fopen("proxylogging.log", "w");
+	fopen_s(&file_log_proxy_ptr, "proxylogging.log", "a");
 	fclose(file_log_proxy_ptr);
 }
 
@@ -33,13 +33,15 @@ void logging(struct sockaddr_in *sockaddr_in) {
 
 void entrylogformat(char *stringlogging, struct sockaddr_in *sockaddr_in, char *url, int size) {
 	time_t now;
+	struct tm newtime;
 	char strtime[MAX];
 	unsigned char x, y, w, z;
 	unsigned long host;
 	unsigned long sockaddr = sockaddr_in->sin_addr.S_un.S_addr;
 
 	now = time(NULL);
-	strftime(strtime, MAX, "%a %d %b %Y %H: %M: %S %Z", localtime(&now));
+	localtime_s(&newtime, &now);
+	strftime(strtime, MAX, "%a %d %b %Y %H: %M: %S %Z", &newtime);
 
 	host = ntohl(sockaddr);
 	x = (host >> 24);
@@ -48,5 +50,6 @@ void entrylogformat(char *stringlogging, struct sockaddr_in *sockaddr_in, char *
 	z = host & 0xff;
 
 	//Return the entire string log
-	sprintf(stringlogging, "%s: %d.%d.%d.%d %s", strtime, x, y, w, z, url);
+	//sprintf(stringlogging, "%s: %d.%d.%d.%d %s", strtime, x, y, w, z, url);
+	sprintf_s(stringlogging, sizeof(stringlogging), "%s: %d.%d.%d.%d %s", strtime, x, y, w, z, url);
 }

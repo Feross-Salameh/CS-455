@@ -4,9 +4,9 @@
 #pragma once
 #include "stdHeaders.hpp"
 #include "http-parser-master\http_parser.h"
-#include <winsock2.h>
+//#include <winsock2.h>
 #include <iostream>
-#include <WS2tcpip.h>
+//#include <WS2tcpip.h>
 #include <sstream>
 
 #pragma comment(lib, "Ws2_32.lib")

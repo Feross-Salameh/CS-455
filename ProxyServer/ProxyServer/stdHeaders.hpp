@@ -1,9 +1,10 @@
 // Use this header to include all of the standard headers used. This way we can pull from one place.
 #ifndef STDHEADERS_HPP
 #define STDHEADERS_HPP
-#pragma once
 
-//#include <Windows.h>
+#pragma once
+#define WIN32_LEAN_AND_MEAN 1
+#include <Windows.h>
 #include <ostream>
 #include <iostream>
 #include <string>

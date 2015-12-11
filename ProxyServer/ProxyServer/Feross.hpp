@@ -21,4 +21,7 @@ int setupLisSok();
 */
 int selectLoop();
 
+DWORD WINAPI MyThreadFunction(LPVOID lpParam);
+void ErrorHandler(LPTSTR lpszFunction);
+
 #endif // FEROSS_HPP

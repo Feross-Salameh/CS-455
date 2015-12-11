@@ -1,7 +1,16 @@
 #include "Feross.hpp"
 
 SOCKET listenSocket = INVALID_SOCKET; //socket used to recieve inc connects. 
+#define MAX_THREADS 300 
+//PMYDATA pDataArray[MAX_THREADS];
+DWORD   dwThreadIdArray[MAX_THREADS];
+HANDLE  hThreadArray[MAX_THREADS];
+int threadCount = 0;
 using namespace std;
+
+
+
+
 int setupLisSok()
 {
 	WSADATA wsaData;
@@ -30,6 +39,14 @@ int setupLisSok()
 		WSACleanup();
 		return -1;
 	}
+	iResult = bind(listenSocket, (struct sockaddr *)&addr, sizeof(addr));
+	if (iResult == SOCKET_ERROR) {
+		printf("bind failed with error: %d\n", WSAGetLastError());
+		freeaddrinfo(result);
+		closesocket(listenSocket);
+		WSACleanup();
+		return -1;
+	}
 	freeaddrinfo(result);
 	iResult = listen(listenSocket, SOMAXCONN);
 	if (iResult == SOCKET_ERROR) {
@@ -42,13 +59,12 @@ int setupLisSok()
 	return 1;
 }
 
-
-int selecLoop()
+int selectLoop()
 {
 	FD_SET lis;
 	FD_ZERO(&lis);
 	timeval timeout = timeval();
-	timeout.tv_sec = 10;
+	timeout.tv_sec = 1;
 	DWORD timeout2 = 100;
 	while (true)
 	{
@@ -60,11 +76,23 @@ int selecLoop()
 		else if (selectReturn == 0)
 		{
 			// wait for child processes to die
-			WaitForMultipleObjects(5, NULL, FALSE, timeout2);
+			WaitForMultipleObjects(5, hThreadArray, FALSE, timeout2);
 		}
 		else // selectReturn > 0
 		{
-
+			cout << "Accepting new connection " << endl;
+			SOCKET acceptSocket = accept(listenSocket, NULL, NULL);
+			if (acceptSocket == INVALID_SOCKET) 
+			{
+				printf("accept failed with error: %d\n", WSAGetLastError());
+				WSACleanup();
+				break;
+			}
+			CreateThread(NULL, 0, MyThreadFunction, &acceptSocket, 0, &dwThreadIdArray[threadCount++]);
+			WaitForMultipleObjects(5, hThreadArray, FALSE, timeout2);
 		}
 	}
+
+	
+	return 1;
 }
