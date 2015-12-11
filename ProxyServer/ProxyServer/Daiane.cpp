@@ -10,15 +10,16 @@
 //Functions
 void logging(struct sockaddr_in *sockaddr_in);
 void file_log_proxy(char *stringlogging, struct sockaddr_in *sockaddr_in, char *url, int size);
+FILE *file_log_proxy_ptr;
 
-int log() {
+void log() {
 	//The file to be writing
-	FILE *file_log_proxy;
+	
 
-	file_log_proxy = fopen("proxylogging.log", "a");
-	file_log_proxy = fopen("proxylogging.log", "w");
+	file_log_proxy_ptr = fopen("proxylogging.log", "a");
+	file_log_proxy_ptr = fopen("proxylogging.log", "w");
 
-	fclose(file_log_proxy);
+	fclose(file_log_proxy_ptr);
 }
 
 void logging(struct sockaddr_in *sockaddr_in) {
@@ -26,8 +27,8 @@ void logging(struct sockaddr_in *sockaddr_in) {
 	char entrylog[MAX], url[MAX];
 	
 	entrylogformat(entrylog, sockaddr_in, url, size);
-	fprintf(file_log_proxy, "%s %d \n", entrylog, size);
-	fflush(file_log_proxy);
+	fprintf(file_log_proxy_ptr, "%s %d \n", entrylog, size);
+	fflush(file_log_proxy_ptr);
 }
 
 void entrylogformat(char *stringlogging, struct sockaddr_in *sockaddr_in, char *url, int size) {
@@ -35,13 +36,13 @@ void entrylogformat(char *stringlogging, struct sockaddr_in *sockaddr_in, char *
 	char strtime[MAX];
 	unsigned char x, y, w, z;
 	unsigned long host;
-	unsigned long sockaddr;
+	unsigned long sockaddr = sockaddr_in->sin_addr.S_un.S_addr;
 
 	now = time(NULL);
 	strftime(strtime, MAX, "%a %d %b %Y %H: %M: %S %Z", localtime(&now));
 
 	host = ntohl(sockaddr);
-	x = (host >> 24;
+	x = (host >> 24);
 	y = (host >> 16) & 0xff;
 	w = (host >> 8) & 0xff;
 	z = host & 0xff;
