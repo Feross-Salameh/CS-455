@@ -14,16 +14,19 @@ int messageHandler(int clientSocketFd, char* target_port)
 		buf_str.clear();
 		cout << "Reading in header from browser." << endl;
 		numBytesRcvd = recv(clientSocketFd, buffer, HTTP_MAX_HEADER_SIZE, 0);
-		buf_str.copy(buffer, numBytesRcvd);
-		message.append(buf_str, buf_str.capacity()); // Generate the message
-
+		message += buffer;
 		SSIZE_T endOfHeader = message.find("\r\n\r\n"); // position is at the beginning of the "\r\n" "\r\n" pairs.
 		if (endOfHeader != string::npos) // End of header found. Populate the header string.
 		{
 			// Populate the header
-			header.copy(&message[0], endOfHeader + 2, 0); // Copy from the beginning of the message to the end of the header.
+			//header.copy(&message[0], endOfHeader + 2, 0); // Copy from the beginning of the message to the end of the header.
+			header = message.substr(0, endOfHeader + 2);
 			string convertBuf;
 			SSIZE_T contentLengthPos = header.find("Content-Length: ");
+			if (contentLengthPos < 1) // couldn't find it
+			{
+				// TODO: something should happen here, maybe a break?
+			}
 			convertBuf.copy(&header[contentLengthPos + strlen("Content-Length: ")], header.find("\r\n", contentLengthPos) - contentLengthPos); // Copy starting location of the length to the end of the line.
 			contentLength = stoi(convertBuf);
 			cout << "Length of header is: " << header.capacity() << endl << "Length of content is: " << contentLength << endl;
