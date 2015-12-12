@@ -4,46 +4,61 @@
 int messageHandler(int clientSocketFd, char* target_port)
 {
 	char buffer[HTTP_MAX_HEADER_SIZE] = { 0 };
-	string header, body, hostName, postContent, message, buf_str;
+	string header, body, hostName, postContent, message;
 	SSIZE_T numBytesRcvd = 0, numBytesSent = 0;
 	int find1, find2, contentLength, hostIP, proxyServSocket;
-	bool loop = true;
+	//bool loop = true;
 
-	while (loop) // Start reading in the message header. Unknown when to stop.
-	{
-		buf_str.clear();
+	//while (loop) // Start reading in the message header. Unknown when to stop.
+	//{
 		cout << "Reading in header from browser." << endl;
 		numBytesRcvd = recv(clientSocketFd, buffer, HTTP_MAX_HEADER_SIZE, 0);
-		message += buffer;
+		message.copy(buffer, numBytesRcvd);
 		SSIZE_T endOfHeader = message.find("\r\n\r\n"); // position is at the beginning of the "\r\n" "\r\n" pairs.
 		if (endOfHeader != string::npos) // End of header found. Populate the header string.
 		{
 			// Populate the header
-			//header.copy(&message[0], endOfHeader + 2, 0); // Copy from the beginning of the message to the end of the header.
 			header = message.substr(0, endOfHeader + 2);
 			string convertBuf;
 			SSIZE_T contentLengthPos = header.find("Content-Length: ");
-			if (contentLengthPos < 1) // couldn't find it
-			{
-				// TODO: something should happen here, maybe a break?
-			}
 			convertBuf.copy(&header[contentLengthPos + strlen("Content-Length: ")], header.find("\r\n", contentLengthPos) - contentLengthPos); // Copy starting location of the length to the end of the line.
 			contentLength = stoi(convertBuf);
-			cout << "Length of header is: " << header.capacity() << endl << "Length of content is: " << contentLength << endl;
 
-			// Populate the body
-			body.copy(&message[endOfHeader + 2], message.capacity() - (endOfHeader + 3));
-			while ((numBytesRcvd = recv(clientSocketFd, buffer, HTTP_MAX_HEADER_SIZE, 0)) > 0)
+			if (contentLength > 0) // It is possible no content-length is populated.
 			{
-				buf_str.clear();
-				buf_str.copy(buffer, numBytesRcvd);
-				body.append(buf_str, buf_str.capacity());
+				cout << "Length of header is: " << header.capacity() << endl << "Length of content is: " << contentLength << endl;
+
+				// Populate the body
+				body.copy(&message[endOfHeader + 2], message.capacity() - (endOfHeader + 3));
+				contentLength -= body.capacity();
+
+				while ((contentLength -= recv(clientSocketFd, buffer, HTTP_MAX_HEADER_SIZE, 0)) > 0)
+				{
+					body.append(buffer, numBytesRcvd);
+				}
+			}
+			else
+			{
+				cout << "Length of header is: " << header.capacity() << endl << endl;
+
+				// Populate the body
+				body.copy(&message[endOfHeader + 2], message.capacity() - (endOfHeader + 3));
+
+				while ((numBytesRcvd = recv(clientSocketFd, buffer, HTTP_MAX_HEADER_SIZE, 0)) > 0)
+				{
+					body.append(buffer, numBytesRcvd);
+				}
 			}
 			cout << "Length of body is: " << body.capacity() << endl << endl;
 
-			loop = false;
+			//loop = false;
 		}
-	}
+		else
+		{
+			cout << "Improper message received." << endl;
+			return -1;
+		}
+	//}
 	
 	// Correct the connection type for the proxy server.
 	find1 = header.find("Connection: "); // Finds where "Connection: " is, we don't know what follows.
