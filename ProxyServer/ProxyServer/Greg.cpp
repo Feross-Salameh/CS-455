@@ -4,8 +4,9 @@ int messageHandler(int clientSocketFd, char* target_port)
 {
 	char message[HTTP_MAX_HEADER_SIZE] = { 0 }, *header, *body, *start, *end, *bulk, hostName[256] = { 0 };
 	vector<char> bulkMessage;
-	int i, j, hostIP, hostLength, proxyServSocket, messageLength = 0, headerLength, bodyLength, requestType;// if requestType == 0 it's a RESPONSE
-	struct addrinfo hints, *targetInfo;
+	int i, j, err, hostLength, proxyServSocket, messageLength = 0, headerLength, bodyLength, requestType;// if requestType == 0 it's a RESPONSE
+	struct addrinfo hints, *targetInfo, *p;
+	struct in_addr hostIP;
 
 	cout << "Reading in header from browser." << endl;
 	
@@ -33,11 +34,7 @@ int messageHandler(int clientSocketFd, char* target_port)
 	header = new char[headerLength + 4];
 	cout << "Header Length is: " << headerLength << endl;
 	for (i = 0; i < headerLength; i++)
-	{
 		header[i] = bulkMessage[i];
-		cout << i << ". " << header[i] << endl;
-	}
-
 	header[i] = '\r';
 	header[i + 1] = '\n';
 	header[i + 2] = '\r';
@@ -71,46 +68,65 @@ int messageHandler(int clientSocketFd, char* target_port)
 		start = strstr(header, "Host: ") + sizeof("ost: ");
 		end = strstr(start, "\r\n"); // Found where that line ends in header after "Host: ".
 		hostLength = end - start;
-		//cout << "Copying: " << hostLength << " bytes. Copying: \"" << (char*)start << "\"." << endl;
+
 		for (i = 0; i < hostLength; i++)
 			hostName[i] = *(start + i);
-		
+
 		cout << "Host name: " << hostName << endl;
-		
+
 		// Get the target host struct created.
 		memset(&hints, 0, sizeof(hints));
-		
-		hints.ai_family = AF_UNSPEC;
+		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
-		
-		hostIP = getaddrinfo(hostName, target_port, &hints, &targetInfo); // Populates targetInfo with information about the target URL.
-		cout << "Host IP address: " << hostIP << endl << "Port: " << target_port << endl;
+
+		err = getaddrinfo(hostName, NULL, &hints, &targetInfo); // Populates targetInfo with a list of information about the target URL.
+		if (err != 0)
+		{
+			cout << "Miss in DNS poll: " << err << endl;
+			return -1;
+		}
+		else
+		{
+			cout << "Successful hit in DNS poll: " << err << endl;
+		}
+
+		for (p = targetInfo, i = 1; p != NULL; p = p->ai_next, i++)
+		{
+			cout << "Connection attempt # " << i << end;
+
+			if ((proxyServSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+			{
+				cout << "Socket() call failed. Error: " << WSAGetLastError() << endl;
+				continue;
+			}
+
+			if (connect(proxyServSocket, p->ai_addr, p->ai_addrlen) == -1) {
+				closesocket(proxyServSocket);
+				cout << "Connect() call failed. Error: " << WSAGetLastError() << endl;
+				continue;
+			}
+
+			break; // if we get here, we must have connected successfully
+		}
+
+		if (p == NULL) {
+			// looped off the end of the list with no connection
+			cout << "Failed to connect" << endl;
+			return -1;
+		}
+		else
+			cout << "Successfully connected" << endl;
 	}
 	else // response type message
 	{
+		return -1;
+	}
 
-	}
-	
-	// Error checking and creation of network interface.
-	proxyServSocket = socket(targetInfo->ai_family, targetInfo->ai_socktype, targetInfo->ai_protocol);
-	cout << "TEST0 " << endl;
-	if (proxyServSocket < 0) // Socket() failed.
-	{
-		cout << "Socket() call failed." << endl;
-		return -1;
-	}
-	cout << "TEST1 " << endl;
-	if (connect(proxyServSocket, targetInfo->ai_addr, (int)(targetInfo->ai_addrlen)) < 0)
-	{
-		cout << "Connect() failed." << endl;
-		return -1;
-	}
-	cout << "TEST2 " << endl;
 	//Create and send the message
 	cout << "Header size: " << headerLength << endl;
 	cout << "Body size: " << bodyLength << endl;
 	cout << "Message size: " << headerLength + bodyLength << endl;
-	cout << "TEST3 " << endl;
+
 	i = 0; // counter
 	j = 0; // bytes sent
 	while (headerLength > j)
@@ -206,16 +222,10 @@ void correctConnectionField(char* header)
 {
 	char *target, *targetStart, *targetEnd;
 
-	if ((target = strstr(header, "Connection: ")))
-	{
-		target = strstr(header, "Connection: ");
-		targetStart = target + sizeof("Connection: ") - 1;
-		targetEnd = strstr(targetStart, "\r\n"); // Found where that line ends in header after "Connection: ".
-		strcpy(targetStart, "close"); // Refill with "Connection: close\r\n"
-		*(targetStart + 6) = ' '; // Replace \0 terminator from strcpy() with a space.
-		cout << "Deleted a connection of: " << targetEnd - targetStart << "B." << endl << "New connection type is: \"";
-		for (int k = 0; k < sizeof("Connection: close"); k++)
-			cout << *(target + k);
-		cout << "\"." << endl;
-	}
+	target = strstr(header, "Connection: ");
+	targetStart = target + sizeof("Connection: ") - 1;
+	targetEnd = strstr(targetStart, "\r\n"); // Found where that line ends in header after "Connection: ".
+	strcpy(targetStart, "close"); // Refill with "Connection: close\r\n"
+	*(targetStart + 6) = ' '; // Replace \0 terminator from strcpy() with a space.
+	cout << "Deleted a connection of: " << targetEnd - targetStart << "B." << endl << "New connection type is: \"" << (char*)(target) << "\"." << endl;
 }
