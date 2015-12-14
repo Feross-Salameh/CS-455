@@ -120,17 +120,19 @@ int messageHandler(int clientSocketFd, char* target_port)
 	
 	// Send the header and body
 	sendData(headerLength, servSocket, header, "header");
-	sendData(bodyLength, servSocket, body, "body");
+	if(bodyLength != 0)
+		sendData(bodyLength, servSocket, body, "body");
 	
 	// Clean up. Makes dynamically instantiated arrays "size" 0.
-	delete [] header;  
-	delete [] body;
-	bulkMessage.clear();
+	//delete [] header;  
+	//delete [] body;
+	//bulkMessage.clear();
 
 	//****************************************
 	//       Response Message Handling
 	//****************************************
 
+	memset(message, '\0', HTTP_MAX_HEADER_SIZE);
 	headerLength = readInMessage(servSocket, bulkMessage, messageLength, message); // Begin reading in the message, starting with the header.
 
 	// Construct header array.
@@ -217,7 +219,7 @@ int isRequest(char* message)
 
 int readInMessage(int clientSocketFd, vector<char> &bulkMessage, int &messageLength, char* message)
 {
-	int j = 0, i = 0, headerLength;
+	int j = 0, i = 0, headerLength = 0;
 
 	cout << "Reading in header from browser." << endl;
 
@@ -225,7 +227,7 @@ int readInMessage(int clientSocketFd, vector<char> &bulkMessage, int &messageLen
 	{
 		j = recv(clientSocketFd, message, HTTP_MAX_HEADER_SIZE, 0);
 		cout << "Read in a chunk of: " << j << "B." << endl;
-		
+		cout << message << endl;
 		if (strstr(message, "\r\n\r\n") != nullptr)
 			headerLength = (messageLength + (strstr(message, "\r\n\r\n") - &message[0])) + 4;
 
