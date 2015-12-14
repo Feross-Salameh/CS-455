@@ -41,10 +41,11 @@ int messageHandler(int clientSocketFd, char* target_port)
 		bodyLength = 0;
 	else // POST
 	{
+		// Construct body array
 		bodyLength = findContentLength(header);
 		body = new char[bodyLength];
-		for (i = 0; i < HTTP_MAX_HEADER_SIZE - (bulkMessage.size() - headerLength); i++) // Move what remains in the message buffer after the header over.
-			body[i] = bulkMessage[(bulkMessage.size() - headerLength) + i]; // Utilizes what remains in message
+		for (i = 0; i < bulkMessage.size() - headerLength; i++) // Move what remains in the message buffer after the header over.
+			body[i] = bulkMessage[headerLength + i]; // Utilizes what remains in message
 
 		while (bodyLength > i) // Fill what remains of 
 		{
