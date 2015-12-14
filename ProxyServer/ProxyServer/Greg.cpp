@@ -4,7 +4,7 @@ int messageHandler(int clientSocketFd, char* target_port)
 {
 	char message[HTTP_MAX_HEADER_SIZE] = { 0 }, *header, *body, *start, *end, hostName[256] = { 0 };
 	vector<char> bulkMessage;
-	int i, j, err, hostLength, servSocket, messageLength = 0, headerLength, bodyLength, requestType;// if requestType == 0 it's a RESPONSE
+	int i, j, k, err, hostLength, servSocket, messageLength = 0, headerLength, bodyLength, requestType;// if requestType == 0 it's a RESPONSE
 	struct addrinfo hints, *targetInfo, *p;
 
 	//****************************************
@@ -20,16 +20,18 @@ int messageHandler(int clientSocketFd, char* target_port)
 		header[i] = bulkMessage[i];
 	
 	// Clean up the header. Delete any proxy-connection headers and correct the connection field.
+	k = requestLineCleanup(header, headerLength);
 	i = proxyHeaderCleanup(header, headerLength);
 	j = correctConnectionField(header, headerLength);
 
-	if (i > 0 || j > 0) // Resize header to new modified size if any changes made.
+	if ((i > 0 || j > 0) || k > 0) // Resize header to new modified size if any changes made.
 	{
 		cout << "Resized the header." << endl;
 		cout << "Removing " << i << " characters for Proxy-Connection removal." << endl;
 		cout << "Removing " << j << " characters for correcting the Connection type field." << endl;
+		cout << "Removing " << k << " characters for correcting the Request type field." << endl;
 		cout << "Old header size is: " << headerLength << endl;
-		headerLength = headerLength - i - j;
+		headerLength = headerLength - i - j - k;
 		cout << "New header size is: " << headerLength << endl;
 	}
 		
@@ -118,9 +120,13 @@ int messageHandler(int clientSocketFd, char* target_port)
 		sendData(bodyLength, servSocket, body, "body");
 	
 	// Clean up. Makes dynamically instantiated arrays "size" 0.
-	delete [] header;  
+	delete [] header; 
+	headerLength = 0;
 	if (bodyLength != 0)
-		delete [] body;
+	{
+		delete[] body;
+		bodyLength = 0;
+	}
 	bulkMessage.clear();
 
 	//****************************************
@@ -128,6 +134,7 @@ int messageHandler(int clientSocketFd, char* target_port)
 	//****************************************
 
 	memset(message, '\0', HTTP_MAX_HEADER_SIZE);
+	messageLength = 0;
 	headerLength = readInMessage(servSocket, bulkMessage, messageLength, message); // Begin reading in the message, starting with the header.
 
 	// Construct header array.
@@ -135,33 +142,29 @@ int messageHandler(int clientSocketFd, char* target_port)
 	cout << "Header Length is: " << headerLength << endl;
 	for (i = 0; i < headerLength; i++) // Transfers daya from the bulkMessage to the new char array "bulk".
 		header[i] = bulkMessage[i];
-	header[i] = '\r'; // Appends terminators for end of 
-	header[i + 1] = '\n';
-	header[i + 2] = '\r';
-	header[i + 3] = '\n';
 
 	// Clean up the header. Delete any proxy-connection headers and correct the connection field.
 	i = proxyHeaderCleanup(header, headerLength);
 	j = correctConnectionField(header, headerLength);
+
 	if (i > 0 || j > 0) // Resize header to new modified size if any changes made.
 	{
-		bulkMessage.clear();
-		for (int k = 0; k < headerLength - i - j; k++)
-			bulkMessage.push_back(header[k]);
-		bulkMessage.shrink_to_fit(); // Temporary space holder.
-
-		delete[] header;
-		header = new char[headerLength - i - j]; // Reallocate
-
-		for (int k = 0; k < headerLength - i - j; k++) //Re-populate
-			header[k] = bulkMessage[k];
+		cout << "Resized the header." << endl;
+		cout << "Removing " << i << " characters for Proxy-Connection removal." << endl;
+		cout << "Removing " << j << " characters for correcting the Connection type field." << endl;
+		cout << "Old header size is: " << headerLength << endl;
+		headerLength = headerLength - i - j - k;
+		cout << "New header size is: " << headerLength << endl;
 	}
 
 	// Construct body array
 	bodyLength = findContentLength(header);
 	body = new char[bodyLength];
-	for (i = 0; i < HTTP_MAX_HEADER_SIZE - (bulkMessage.size() - headerLength); i++) // Move what remains in the message buffer after the header over.
-		body[i] = bulkMessage[(bulkMessage.size() - headerLength) + i]; // Utilizes what remains in message
+	for (i = 0; i < bulkMessage.size() - headerLength; i++) // Move what remains in the message buffer after the header over.
+	{
+		body[i] = bulkMessage[headerLength + i]; // Utilizes what remains in message
+		cout << i << ": " << body[i] << endl;
+	}
 	
 	while (bodyLength > i) // Fill what remains of 
 	{
@@ -171,12 +174,14 @@ int messageHandler(int clientSocketFd, char* target_port)
 	}
 
 	// Send the header and body
-	sendData(headerLength, clientSocketFd, header, "header");
-	sendData(bodyLength, clientSocketFd, body, "body");
+	sendData(headerLength, servSocket, header, "header");
+	if (bodyLength != 0)
+		sendData(bodyLength, servSocket, body, "body");
 
 	// Clean up. Makes dynamically instantiated arrays "size" 0.
 	delete[] header;
-	delete[] body;
+	if (bodyLength != 0)
+		delete[] body;
 	bulkMessage.clear();
 
 	return 0;
@@ -239,14 +244,15 @@ int readInMessage(int clientSocketFd, vector<char> &bulkMessage, int &messageLen
 
 int findContentLength(char* header)
 {
-	string temp;
-	int length = 0;
-	char *target, *targetStart, *targetEnd;	
+	int length = 0, charCopied;
+	char *target, *targetStart, *targetEnd, temp[10] = { 0 }; // Max content length 10M?
 
 	target = strstr(header, "Content-Length: ");
 	targetStart = strstr(target, " "); // Points to the space in "Content-Length: "
 	targetEnd = strstr(targetStart, "\r\n");
-	temp.copy(targetStart + 1, (targetEnd - targetStart) - 1); // Copy starting location of the length to the end of the line.
+	charCopied = targetEnd - targetStart;
+	for (int i = 0; i < charCopied - 1; i++)
+		temp[i] = targetStart[i+1];
 	length = stoi(temp);
 	cout << "Copied body length: " << temp << "Length of body is: " << length << endl;
 
@@ -311,6 +317,46 @@ int correctConnectionField(char* header, int headerLength)
 	{
 		cout << "Connection-type requires no correction." << endl;
 		return 0;
+	}
+
+	return charToMove;
+}
+
+int requestLineCleanup(char* header, int headerLength)
+{
+	int charToMove = 0, copyStartIndex, copyStopIndex;
+	char *target, *targetStart, *targetEnd;
+	vector<char> temp;
+	bool modify = false;
+
+	target = strstr(header, "http"); // This is where everything copied is being appended if necessary.
+	if (target == nullptr)
+	{
+		target = strstr(header, "www.");
+		if (target == nullptr)
+		{
+			cout << "This header does not have a host in the request-type field." << endl;
+		}
+		else
+			modify = true;
+	}
+	else
+		modify = true;
+	
+	
+	if (modify)
+	{
+		cout << "Correcting the request-type field." << endl;
+		copyStartIndex = (strstr(target, ".com") + 4) - header; // Everything after this point needs to be copied
+		copyStopIndex = headerLength; // Everything upto this point needs to be copied
+
+		for (int i = 0; i < copyStopIndex - copyStartIndex; i++)
+			temp.push_back(*(header + copyStartIndex + i)); // Build up temporary buffer.
+
+		charToMove = (strstr(target, ".com") + 3) - target; // Number of characters being erased.
+
+		for (int i = 0; i < copyStopIndex - copyStartIndex; i++)
+			*(target + i) = temp[i]; // Append temp array to the end of "close\r\n".
 	}
 
 	return charToMove;
