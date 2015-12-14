@@ -22,25 +22,14 @@ int messageHandler(int clientSocketFd, char* target_port)
 	// Clean up the header. Delete any proxy-connection headers and correct the connection field.
 	i = proxyHeaderCleanup(header, headerLength);
 	j = correctConnectionField(header, headerLength);
-	
+
 	if (i > 0 || j > 0) // Resize header to new modified size if any changes made.
 	{
-		cout << "Resizing the header." << endl;
+		cout << "Resized the header." << endl;
 		cout << "Removing " << i << " characters for Proxy-Connection removal." << endl;
 		cout << "Removing " << j << " characters for correcting the Connection type field." << endl;
 		cout << "Old header size is: " << headerLength << endl;
-		bulkMessage.clear();
 		headerLength = headerLength - i - j;
-		for (int k = 0; k < headerLength; k++)
-			bulkMessage.push_back(header[k]);
-		bulkMessage.shrink_to_fit(); // Temporary space holder.
-
-		delete [] header;
-		header = new char[headerLength]; // Reallocate
-
-		for (int k = 0; k < headerLength; k++) //Re-populate
-			header[k] = bulkMessage[k];
-
 		cout << "New header size is: " << headerLength << endl;
 	}
 		
@@ -90,9 +79,9 @@ int messageHandler(int clientSocketFd, char* target_port)
 	// Make connection to the host IP (targetInfo contatins a list of potential IPs. The loop attempts to make connection with each before quitting.
 	for (p = targetInfo, i = 1; p != NULL; p = p->ai_next, i++) // Provided by: beej.us's tutorial on connection() and socket().
 	{
-		cout << "Connection attempt # " << i << end;
-
-		if ((servSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+		servSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		
+		if (servSocket == -1)
 		{
 			cout << "Socket() call failed. Error: " << WSAGetLastError() << endl;
 			continue;
@@ -116,7 +105,12 @@ int messageHandler(int clientSocketFd, char* target_port)
 		return -1;
 	}
 	else
-		cout << "Successfully connected" << endl;
+	{
+		struct sockaddr_in *addr;
+		addr = (struct sockaddr_in *)p->ai_addr;
+		cout << "Successfully connected." << endl;
+		cout << "Host: " << hostName << " on IP: " << inet_ntoa(addr->sin_addr) << endl;
+	}
 	
 	// Send the header and body
 	sendData(headerLength, servSocket, header, "header");
@@ -124,9 +118,10 @@ int messageHandler(int clientSocketFd, char* target_port)
 		sendData(bodyLength, servSocket, body, "body");
 	
 	// Clean up. Makes dynamically instantiated arrays "size" 0.
-	//delete [] header;  
-	//delete [] body;
-	//bulkMessage.clear();
+	delete [] header;  
+	if (bodyLength != 0)
+		delete [] body;
+	bulkMessage.clear();
 
 	//****************************************
 	//       Response Message Handling
@@ -227,7 +222,7 @@ int readInMessage(int clientSocketFd, vector<char> &bulkMessage, int &messageLen
 	{
 		j = recv(clientSocketFd, message, HTTP_MAX_HEADER_SIZE, 0);
 		cout << "Read in a chunk of: " << j << "B." << endl;
-		cout << message << endl;
+
 		if (strstr(message, "\r\n\r\n") != nullptr)
 			headerLength = (messageLength + (strstr(message, "\r\n\r\n") - &message[0])) + 4;
 
@@ -246,7 +241,7 @@ int findContentLength(char* header)
 {
 	string temp;
 	int length = 0;
-	char *target, *targetStart, *targetEnd;
+	char *target, *targetStart, *targetEnd;	
 
 	target = strstr(header, "Content-Length: ");
 	targetStart = strstr(target, " "); // Points to the space in "Content-Length: "
@@ -280,9 +275,9 @@ int proxyHeaderCleanup(char* header, int headerLength)
 
 int correctConnectionField(char* header, int headerLength)
 {
-	int length = 0, charToMove = 0;
+	int charToMove = 0, copyStartIndex, copyStopIndex;
 	char *target, *targetStart, *targetEnd;
-	char arr[] = { 'c','l','o','s','e','\r','\n' };
+	vector<char> temp;
 
 	target = strstr(header, "Connection:");
 	if (target == nullptr)
@@ -295,14 +290,22 @@ int correctConnectionField(char* header, int headerLength)
 	{
 		cout << "Correcting the Connection-type field." << endl;
 		targetStart = strstr(target, " ") + 1; // targetStart is the character after the space in "Connection: ".
-		targetEnd = strstr(targetStart, "\r\n"); // Found where that line ends in header after "Connection: ".
-		strcpy(targetStart, arr); // Refill with "Connection: close\r\n\"
-		/*charToMove = targetEnd - strstr(targetStart, "\r\n");
-		cout << "Deleted a connection of: " << charToMove << "B." << endl;
+		targetEnd = strstr(target, "\r\n") + 2;
+		copyStartIndex = (strstr(target, "\r\n") + 2) - header; // Everything after this point needs to be copied to the end of the new connection type.
+		copyStopIndex = headerLength;
 
-		targetStart = strstr(targetStart, "\r\n") + 2; // Update targetStart for header restructuring.
-		for (int i = 0; i < ((headerLength - (targetEnd - header)) - charToMove); i++)
-			*(targetStart + i) = *(targetEnd + i);*/
+		for (int i = 0; i < copyStopIndex - copyStartIndex; i++)
+			temp.push_back(*(targetEnd + i)); // Build up temporary buffer.
+
+		charToMove = strstr(target, "\r\n") - header;
+		
+		strcpy(targetStart, " close\r\n"); // Refill with "Connection: close\r\n\0" Don't forget the null-terminator.
+		charToMove = charToMove - (strstr(target, "\r\n") - header) + 1;
+
+		targetStart = strstr(target, "\r\n") + 2; // This is where the remaining message is being appended after deleting the old connection.
+		for (int i = 0; i < copyStopIndex - copyStartIndex; i++)
+			*(targetStart + i) = temp[i]; // Append temp array to the end of "close\r\n".
+
 	}
 	else
 	{

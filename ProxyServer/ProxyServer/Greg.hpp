@@ -9,6 +9,7 @@
 #include <cstring>
 #include <vector>
 #include <string>
+#include <ios>
 
 #pragma comment(lib, "Ws2_32.lib")
 
