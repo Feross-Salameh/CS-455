@@ -161,10 +161,7 @@ int messageHandler(int clientSocketFd, char* target_port)
 	bodyLength = findContentLength(header);
 	body = new char[bodyLength];
 	for (i = 0; i < bulkMessage.size() - headerLength; i++) // Move what remains in the message buffer after the header over.
-	{
 		body[i] = bulkMessage[headerLength + i]; // Utilizes what remains in message
-		cout << i << ": " << body[i] << endl;
-	}
 	
 	while (bodyLength > i) // Fill what remains of 
 	{
@@ -174,9 +171,9 @@ int messageHandler(int clientSocketFd, char* target_port)
 	}
 
 	// Send the header and body
-	sendData(headerLength, servSocket, header, "header");
+	sendData(headerLength, clientSocketFd, header, "header");
 	if (bodyLength != 0)
-		sendData(bodyLength, servSocket, body, "body");
+		sendData(bodyLength, clientSocketFd, body, "body");
 
 	// Clean up. Makes dynamically instantiated arrays "size" 0.
 	delete[] header;
