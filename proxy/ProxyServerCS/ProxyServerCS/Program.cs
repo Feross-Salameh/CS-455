@@ -16,6 +16,7 @@ namespace ProxyServerCS
         // This method will be called when the thread is started. 
         public void DoWork()
         {
+            Console.WriteLine("\nStarting new Thread...");
             while (!_shouldStop)
             {
                 byte[] buffer = new byte[80*1024];
@@ -30,7 +31,6 @@ namespace ProxyServerCS
                 var ips = Dns.GetHostEntry(host[1]).AddressList;
                 foreach (var ip in ips)
                     if(ip.AddressFamily == AddressFamily.InterNetwork)
-                    {
                         try
                         {
                             conSok.Connect(ip, 80);
@@ -41,7 +41,7 @@ namespace ProxyServerCS
                             _shouldStop = true;
                             break;
                         }
-                    }
+
                 // http 1.1 stuff, removing headers/adding more
                 var lLines = lines.ToList();
                 for (i = 0; i < lines.Length; i++)
@@ -50,9 +50,9 @@ namespace ProxyServerCS
                         lLines.RemoveAt(i);
                     else if ((lines[i].Contains("Proxy-Connection:")))
                         lLines.RemoveAt(i);
+
                     if (lines[i] == "")
                         lLines.Insert(i - 1, "Connection: close");
-
                 }
                 // translate message back.
                 buffer = lLines.SelectMany(s => Encoding.ASCII.GetBytes(s)).ToArray();
@@ -77,6 +77,7 @@ namespace ProxyServerCS
                                 lLines.Insert(i - 1, "Connection: close");
 
                         }
+
                     }
                     catch(Exception e)
                     {
