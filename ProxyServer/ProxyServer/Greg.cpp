@@ -79,7 +79,7 @@ int messageHandler(int clientSocketFd, char* target_port)
 	hints.ai_socktype = SOCK_STREAM;
 	
 	// Get IP of host.
-	if ((err = getaddrinfo(hostName, NULL, &hints, &targetInfo)) != 0) // Populates targetInfo with a list of information about the target URL.
+	if ((err = getaddrinfo(hostName, "80", &hints, &targetInfo)) != 0) // Populates targetInfo with a list of information about the target URL.
 	{
 		cout << "Miss in DNS poll: " << err << endl;
 		return -1;
@@ -100,9 +100,10 @@ int messageHandler(int clientSocketFd, char* target_port)
 		else
 			cout << "Socket to connect to host: " << servSocket << endl;
 
-		if (connect(servSocket, p->ai_addr, p->ai_addrlen) != 0) {
-			closesocket(servSocket);
+		if (connect(servSocket, p->ai_addr, p->ai_addrlen) == SOCKET_ERROR) {
+			
 			cout << "Connect() call failed. WSA last error: " << WSAGetLastError() << endl;
+			closesocket(servSocket);
 			continue;
 		}
 
